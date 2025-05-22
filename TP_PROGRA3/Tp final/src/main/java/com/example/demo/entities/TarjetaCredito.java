@@ -13,5 +13,6 @@ import lombok.*;
 @Table(
         name = "tbl_tarjeta_credito"
 )
-public class TarjetaCredito {
+public class TarjetaCredito extends Tarjeta {
+    private double limite;
 }
