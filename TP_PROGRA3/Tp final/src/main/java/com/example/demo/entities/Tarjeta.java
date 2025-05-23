@@ -1,5 +1,8 @@
 package com.example.demo.entities;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Future;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,10 +25,13 @@ public abstract class Tarjeta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long tarjetaId;
+    @NotBlank
     private String numero;
+    @Future
     private LocalDate vencimiento;
     private int codigoSeguridad;
     private boolean bloqueada;
+    @NotNull
     private String marca;
     @ManyToOne(
             cascade = CascadeType.ALL,
@@ -35,6 +41,7 @@ public abstract class Tarjeta {
             name = "cuenta_id",
             referencedColumnName = "cuentaId"
     )
+    @NotNull
     private Cuenta cuenta;
     @OneToMany(
             cascade = CascadeType.ALL,
@@ -44,5 +51,6 @@ public abstract class Tarjeta {
             name = "tarjeta_id",
             referencedColumnName = "tarjetaId"
     )
+
     private List<Movimiento> movimientoList;
 }
