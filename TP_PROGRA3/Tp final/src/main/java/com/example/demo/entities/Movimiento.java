@@ -3,6 +3,7 @@ import com.example.demo.entities.enums.TipoMovimiento;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -19,18 +20,20 @@ import java.time.LocalDate;
 public class Movimiento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long clienteId;
-    private double monto;
+    private long movimientoId;
+    private BigDecimal monto;
     private LocalDate fecha;
     private TipoMovimiento tipoMovimiento;
-    private String Descripcion;
-    @ManyToOne(
-            cascade = CascadeType.ALL,
-            fetch = FetchType.EAGER
-    )
+    private String descripcion;
+    @PrePersist
+    protected void alCrear(){
+        fecha = LocalDate.now();
+    }
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "cuenta_id",
-            referencedColumnName = "cuentaId"
+            referencedColumnName = "cuentaId",
+            nullable = false
     )
     private Cuenta cuenta;
     @ManyToOne(
