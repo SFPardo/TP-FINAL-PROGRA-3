@@ -1,18 +1,24 @@
 package com.example.demo.services;
 
 import com.example.demo.dto.CuentaDTO;
+import com.example.demo.dto.MovimientoDTO;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.Movimiento;
+import com.example.demo.entities.Tarjeta;
 import com.example.demo.entities.Usuario;
 import com.example.demo.entities.enums.TipoCuenta;
 import com.example.demo.entities.enums.TipoMovimiento;
 import com.example.demo.repositories.CuentaRepository;
+import com.example.demo.repositories.MovimientoRepository;
+import com.example.demo.repositories.TarjetaRepository;
 import com.example.demo.repositories.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,16 +28,19 @@ public class CuentaService {
     @Autowired
     private UsuarioRepository usuarioRepository;
     @Autowired
+    private MovimientoRepository movimientoRepository;
+    @Autowired
+    private TarjetaRepository tarjetaRepository;
+    @Autowired
     private GeneradorAliasService generadorAliasService;
     @Autowired
     private GeneradorCbuService generadorCbuService;
-    @Autowired
-    private MovimientoServices movimientoServices;
 
     @Transactional
     public Cuenta crearCuenta(CuentaDTO dto){
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
                 .orElseThrow(() -> new IllegalArgumentException("No existe el usuario asociado a la cuenta"));
+
         Cuenta cuenta = Cuenta.builder()
                 .usuario(usuario)
                 .build();
@@ -223,5 +232,27 @@ public class CuentaService {
                 .build();
 
         cuenta.addMovimiento(movimiento);
+    }
+
+    public List<MovimientoDTO> listarMovimientosPorCuenta(String alias) {
+        Cuenta cuenta = cuentaRepository.findByAlias(alias)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el alias proporcionado."));
+
+        List<Movimiento> movimientosCuenta = movimientoRepository.findByCuentaIdOrderByFechaDesc(cuenta.getCuentaId());
+
+        List<Tarjeta> tarjetas = tarjetaRepository.findByCuentaId(cuenta.getCuentaId());
+        for (Tarjeta tarjeta : tarjetas) {
+            List<Movimiento> movimientosTarjeta = movimientoRepository.findByTarjetaIdOrderByFechaDesc(tarjeta.getTarjetaId());
+            movimientosCuenta.addAll(movimientosTarjeta);
+        }
+
+        return movimientosCuenta.stream()
+                .sorted((m1, m2) -> m2.getFecha().compareTo(m1.getFecha()))
+                .map(movimiento -> new MovimientoDTO(
+                        movimiento.getMonto(),
+                        movimiento.getFecha(),
+                        movimiento.getTipoMovimiento(),
+                        movimiento.getDescripcion()))
+                .toList();
     }
 }

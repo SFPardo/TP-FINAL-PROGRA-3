@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dto.CuentaDTO;
+import com.example.demo.dto.MovimientoDTO;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.services.CuentaService;
 import jakarta.validation.Valid;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/cuentas")
@@ -74,6 +76,22 @@ public class CuentaController {
         return ResponseEntity.ok("Retiro realizado exitosamente");
     }
 
+    @GetMapping("/{alias}/movimientos")
+    public ResponseEntity<List<MovimientoDTO>> obtenerMovimientosCuenta(@PathVariable String alias) {
+        try {
+            List<MovimientoDTO> movimientos = cuentaService.listarMovimientosPorCuenta(alias);
+            return ResponseEntity.ok(movimientos);
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("No existe una cuenta")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // 400 Bad Request
+            }
+        } catch (Exception e) {
+            System.err.println("Error al obtener movimientos para el alias " + alias + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
 }
 
