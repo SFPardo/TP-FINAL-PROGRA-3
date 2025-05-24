@@ -59,6 +59,13 @@ public class Cuenta {
             orphanRemoval = true
     )
     private List<Movimiento> movimientoList = new ArrayList<>();
+    @OneToMany(
+            mappedBy = "cuenta",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true
+    )
+    private List<Tarjeta> tarjetaList = new ArrayList<>();
 
     public void addMovimiento(Movimiento movimiento) {
         movimientoList.add(movimiento);

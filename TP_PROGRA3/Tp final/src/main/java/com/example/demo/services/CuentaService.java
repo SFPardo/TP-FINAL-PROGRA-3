@@ -166,10 +166,63 @@ public class CuentaService {
                 .descripcion("Transferencia de " + cuentaOrigen.getAlias())
                 .cuenta(cuentaDestino)
                 .build();
+
         cuentaOrigen.addMovimiento(salida);
         cuentaDestino.addMovimiento(entrada);
 
         cuentaRepository.save(cuentaOrigen);
         cuentaRepository.save(cuentaDestino);
+    }
+
+    @Transactional
+    public void retirarDinero(String alias, BigDecimal monto) {
+        if (alias == null || monto == null) {
+            throw new IllegalArgumentException("El alias y el monto no pueden ser nulos.");
+        }
+        Cuenta cuenta = cuentaRepository.findByAlias(alias)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el id proporcionado."));
+
+        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor que cero.");
+        }
+
+        if (cuenta.getSaldo().compareTo(monto) < 0) {
+            throw new IllegalArgumentException("Fondos insuficientes en la cuenta.");
+        }
+
+        cuenta.setSaldo(cuenta.getSaldo().subtract(monto));
+
+        Movimiento movimiento = Movimiento.builder()
+                .tipoMovimiento(TipoMovimiento.EGRESO)
+                .monto(monto)
+                .descripcion("Extracción de dinero")
+                .cuenta(cuenta)
+                .build();
+
+        cuenta.addMovimiento(movimiento);
+    }
+
+    @Transactional
+    public void depositarDinero(String alias, BigDecimal monto) {
+        if (alias == null || monto == null) {
+            throw new IllegalArgumentException("El alias y el monto no pueden ser nulos.");
+        }
+        Cuenta cuenta = cuentaRepository.findByAlias(alias)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el id proporcionado."));
+
+        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor que cero.");
+        }
+
+        cuenta.setSaldo(cuenta.getSaldo().add(monto));
+
+        Movimiento movimiento = Movimiento.builder()
+                .tipoMovimiento(TipoMovimiento.INGRESO)
+                .monto(monto)
+                .descripcion("Depósito de dinero")
+                .cuenta(cuenta)
+                .build();
+
+        cuenta.addMovimiento(movimiento);
     }
 }

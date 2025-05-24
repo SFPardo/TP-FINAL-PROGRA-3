@@ -61,6 +61,20 @@ public class CuentaController {
         cuentaService.transferenciaEntreCuentas(cbuOrigen, cbuDestino, monto);
         return ResponseEntity.ok("Transferencia realizada exitosamente");
     }
+
+    @PostMapping("/depositar")
+    public ResponseEntity<String> depositar(@RequestParam String alias, @RequestParam BigDecimal monto) {
+        cuentaService.depositarDinero(alias, monto);
+        return ResponseEntity.ok("Depósito realizado exitosamente");
+    }
+
+    @PostMapping("/retirar")
+    public ResponseEntity<String> retirar(@RequestParam String alias, @RequestParam BigDecimal monto) {
+        cuentaService.retirarDinero(alias, monto);
+        return ResponseEntity.ok("Retiro realizado exitosamente");
+    }
+
+
 }
 
 

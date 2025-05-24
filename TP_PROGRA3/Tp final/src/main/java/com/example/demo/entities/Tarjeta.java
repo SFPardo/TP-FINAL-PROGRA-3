@@ -34,12 +34,12 @@ public abstract class Tarjeta {
     @NotNull
     private String marca;
     @ManyToOne(
-            cascade = CascadeType.ALL,
             fetch = FetchType.EAGER
     )
     @JoinColumn(
             name = "cuenta_id",
-            referencedColumnName = "cuentaId"
+            referencedColumnName = "cuentaId",
+            nullable = false
     )
     @NotNull
     private Cuenta cuenta;
