@@ -130,8 +130,7 @@ public class CuentaService {
             throw new IllegalArgumentException("El nuevo límite no puede ser negativo.");
         }
 
-        cuentaRepository.actualizarLimiteSobregiroPorId(cuentaId, nuevoLimite);
-        cuentaRepository.save(cuenta);
+        cuenta.setLimiteSobregiro(nuevoLimite);
     }
 
 
@@ -142,6 +141,9 @@ public class CuentaService {
         }
         if (monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor que cero.");
+        }
+        if (cbuOrigen.equals(cbuDestino)) {
+            throw new IllegalArgumentException("No se puede transferir dinero a la misma cuenta de origen.");
         }
 
         Cuenta cuentaOrigen = buscarPorCbu(cbuOrigen);
@@ -169,9 +171,6 @@ public class CuentaService {
 
         cuentaOrigen.addMovimiento(salida);
         cuentaDestino.addMovimiento(entrada);
-
-        cuentaRepository.save(cuentaOrigen);
-        cuentaRepository.save(cuentaDestino);
     }
 
     @Transactional
