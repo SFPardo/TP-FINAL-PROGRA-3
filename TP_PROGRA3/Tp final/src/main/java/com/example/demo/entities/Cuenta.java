@@ -4,12 +4,15 @@ import com.example.demo.entities.enums.TipoCuenta;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
 @Setter
-@ToString
+@ToString(exclude = {"usuario", "movimientoList"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -19,7 +22,7 @@ import java.util.List;
 public class Cuenta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long cuentaId;
+    private Long cuentaId;
     @Column(
             name = "cbu",
             nullable = false,
@@ -32,10 +35,16 @@ public class Cuenta {
             unique = true
     )
     private String alias;
-    private double saldo;
+    private BigDecimal saldo;
+    @Enumerated(EnumType.STRING)
     private TipoCuenta tipoCuenta;
+    private BigDecimal limiteSobregiro;
+    private LocalDate fechaCreacion;
+    @PrePersist
+    protected void alCrear(){
+        fechaCreacion = LocalDate.now();
+    }
     @ManyToOne(
-            cascade = CascadeType.ALL,
             fetch = FetchType.EAGER
     )
     @JoinColumn(
@@ -44,12 +53,22 @@ public class Cuenta {
     )
     private Usuario usuario;
     @OneToMany(
+            mappedBy = "cuenta",
             cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY
+            fetch = FetchType.LAZY,
+            orphanRemoval = true
     )
-    @JoinColumn(
-            name = "cuenta_id",
-            referencedColumnName = "cuentaId"
+    private List<Movimiento> movimientoList = new ArrayList<>();
+    @OneToMany(
+            mappedBy = "cuenta",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true
     )
-    private List<Movimiento> movimientoList;
+    private List<Tarjeta> tarjetaList = new ArrayList<>();
+
+    public void addMovimiento(Movimiento movimiento) {
+        movimientoList.add(movimiento);
+        movimiento.setCuenta(this);
+    }
 }

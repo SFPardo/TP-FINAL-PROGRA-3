@@ -30,7 +30,7 @@ public class MovimientoController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Movimiento> buscarMovimientoPorId(@RequestParam int id) {
+    public ResponseEntity<Movimiento> buscarMovimientoPorId(@RequestParam Long id) {
         return movimientoServices.buscarMovimientoPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
