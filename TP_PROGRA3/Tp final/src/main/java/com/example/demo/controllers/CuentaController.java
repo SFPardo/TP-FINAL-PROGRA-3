@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 
-import com.example.demo.dto.CuentaDTO;
+import com.example.demo.dto.CuentaEntradaDTO;
+import com.example.demo.dto.CuentaSalidaDTO;
 import com.example.demo.dto.MovimientoDTO;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.services.CuentaService;
@@ -20,13 +21,13 @@ public class CuentaController {
     @Autowired
     private CuentaService cuentaService;
 
-    @PostMapping
-    public ResponseEntity<CuentaDTO> crearCuenta(@Valid @RequestBody CuentaDTO dto) {
+    @PostMapping("/crear")
+    public ResponseEntity<CuentaEntradaDTO> crearCuenta(@Valid @RequestBody CuentaEntradaDTO dto) {
         cuentaService.crearCuenta(dto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PutMapping("/{cuentaId}/alias")
+    @PutMapping("/{cuentaId}/{alias}")
     public ResponseEntity<String> actualizarAliasCuenta(@PathVariable Long cuentaId, @Valid @RequestBody String nuevoAlias) {
         if(cuentaService.actualizarAliasPorId(cuentaId, nuevoAlias)){
             return ResponseEntity.ok("Alias de cuenta actualizado exitosamente");
@@ -41,14 +42,14 @@ public class CuentaController {
         return ResponseEntity.noContent().build();
     }
     @GetMapping("/{cbu}")
-    public ResponseEntity<Cuenta> buscarPorCbu(@RequestParam String cbu) {
-        Cuenta cuenta = cuentaService.buscarPorCbu(cbu);
+    public ResponseEntity<CuentaSalidaDTO> buscarPorCbu(@RequestParam String cbu) {
+        CuentaSalidaDTO cuenta = cuentaService.buscarPorCbu(cbu);
         return ResponseEntity.ok(cuenta);
     }
 
     @GetMapping("/{alias}")
-    public ResponseEntity<Cuenta> buscarPorAlias(@RequestParam String alias) {
-        Cuenta cuenta = cuentaService.buscarPorAlias(alias);
+    public ResponseEntity<CuentaSalidaDTO> buscarPorAlias(@RequestParam String alias) {
+        CuentaSalidaDTO cuenta = cuentaService.buscarPorAlias(alias);
         return ResponseEntity.ok(cuenta);
     }
 
@@ -76,7 +77,8 @@ public class CuentaController {
         return ResponseEntity.ok("Retiro realizado exitosamente");
     }
 
-    @GetMapping("/{alias}/movimientos")
+    //Poner en MovimientoController
+    /*@GetMapping("/{alias}/movimientos")
     public ResponseEntity<List<MovimientoDTO>> obtenerMovimientosCuenta(@PathVariable String alias) {
         try {
             List<MovimientoDTO> movimientos = cuentaService.listarMovimientosPorCuenta(alias);
@@ -90,7 +92,7 @@ public class CuentaController {
         } catch (Exception e) {
             System.err.println("Error al obtener movimientos para el alias " + alias + ": " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        }*/
     }
 
 }
