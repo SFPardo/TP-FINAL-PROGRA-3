@@ -2,13 +2,17 @@ package com.example.demo.services;
 
 import com.example.demo.entities.Usuario;
 import com.example.demo.repositories.UsuarioRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
+@RequiredArgsConstructor
 public class UsuarioService {
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public void crearUsuario(Usuario usuario) {
         usuarioRepository.save(usuario);
@@ -42,5 +46,23 @@ public class UsuarioService {
     }
     public void eliminarUsuarioPorId(Long id) {
         usuarioRepository.deleteById(id);
+    }
+
+    public Usuario login(String nombreUsuario, int pin) {
+        return usuarioRepository
+                .findNombreUsuarioAndPin(nombreUsuario, pin)
+                .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+    }
+    public Usuario cambiarPin(String nombreUsuario, int nuevoPin) {
+        Usuario usuario = usuarioRepository
+                .findByUsername(nombreUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        usuario.setPin(nuevoPin);
+        return usuarioRepository.save(usuario);
+    }
+
+    public List<Usuario> obtenerTodosLosUsuarios() {
+        return usuarioRepository.findAll();
     }
 }
