@@ -1,6 +1,7 @@
 package com.example.demo.services;
 
-import com.example.demo.dto.CuentaDTO;
+import com.example.demo.dto.CuentaEntradaDTO;
+import com.example.demo.dto.CuentaSalidaDTO;
 import com.example.demo.dto.MovimientoDTO;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.Movimiento;
@@ -17,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,7 +37,7 @@ public class CuentaService {
     private GeneradorCbuService generadorCbuService;
 
     @Transactional
-    public Cuenta crearCuenta(CuentaDTO dto){
+    public Cuenta crearCuenta(CuentaEntradaDTO dto){
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
                 .orElseThrow(() -> new IllegalArgumentException("No existe el usuario asociado a la cuenta"));
 
@@ -53,18 +53,18 @@ public class CuentaService {
 
         cuenta.setSaldo(BigDecimal.valueOf(0));
 
-        if(noEsCuentaCorriente(cuenta.getUsuario().getUsuarioId())){
-            cuenta.setLimiteSobregiro(BigDecimal.valueOf(0));
-        }else{
-            cuenta.setLimiteSobregiro(BigDecimal.valueOf(50000));
-        }
-
         switch (dto.getTipoCuenta()){
             case 1 -> cuenta.setTipoCuenta(TipoCuenta.CORRIENTE);
             case 2 -> cuenta.setTipoCuenta(TipoCuenta.AHORRO_PESOS);
             case 3 -> cuenta.setTipoCuenta(TipoCuenta.AHORRO_DOLARES);
             case 4 -> cuenta.setTipoCuenta(TipoCuenta.SUELDO);
             default -> throw new IllegalArgumentException("Tipo de cuenta no válido");
+        }
+
+        if(noEsCuentaCorriente(cuenta.getUsuario().getUsuarioId())){
+            cuenta.setLimiteSobregiro(BigDecimal.valueOf(0));
+        }else{
+            cuenta.setLimiteSobregiro(BigDecimal.valueOf(50000));
         }
 
         return cuentaRepository.save(cuenta);
@@ -99,13 +99,7 @@ public class CuentaService {
         cuentaRepository.deleteById(cuentaId);
     }
 
-    public void MostrarCuentaPorId(Long id){
-        if(cuentaRepository.findById(id).isPresent()){
-            System.out.println(cuentaRepository.findById(id).get().toString());
-        }
-    }
-
-    public Cuenta buscarPorCbu(String cbu){
+    public CuentaSalidaDTO buscarPorCbu(String cbu){
         if (cbu == null || cbu.isBlank()) {
             throw new IllegalArgumentException("El CBU no puede ser nulo o vacío.");
         }
@@ -113,10 +107,18 @@ public class CuentaService {
         if (cuentaOptional.isEmpty()) {
             throw new IllegalArgumentException("No se encontró ninguna cuenta con el CBU: " + cbu);
         }
-        return cuentaOptional.get();
+        return CuentaSalidaDTO.builder()
+                .cuentaId(cuentaOptional.get().getCuentaId())
+                .cbu(cuentaOptional.get().getCbu())
+                .alias(cuentaOptional.get().getAlias())
+                .saldo(cuentaOptional.get().getSaldo())
+                .tipoCuenta(cuentaOptional.get().getTipoCuenta())
+                .fechaCreacion(cuentaOptional.get().getFechaCreacion())
+                .usuarioId(cuentaOptional.get().getUsuario().getUsuarioId())
+                .build();
     }
 
-    public Cuenta buscarPorAlias(String alias) {
+    public CuentaSalidaDTO buscarPorAlias(String alias) {
         if (alias == null || alias.isBlank()) {
             throw new IllegalArgumentException("El alias no puede ser nulo o vacío.");
         }
@@ -124,7 +126,15 @@ public class CuentaService {
         if (cuentaOptional.isEmpty()) {
             throw new IllegalArgumentException("No se encontró ninguna cuenta con el alias: " + alias);
         }
-        return cuentaOptional.get();
+        return CuentaSalidaDTO.builder()
+                .cuentaId(cuentaOptional.get().getCuentaId())
+                .cbu(cuentaOptional.get().getCbu())
+                .alias(cuentaOptional.get().getAlias())
+                .saldo(cuentaOptional.get().getSaldo())
+                .tipoCuenta(cuentaOptional.get().getTipoCuenta())
+                .fechaCreacion(cuentaOptional.get().getFechaCreacion())
+                .usuarioId(cuentaOptional.get().getUsuario().getUsuarioId())
+                .build();
     }
 
     @Transactional
@@ -155,8 +165,10 @@ public class CuentaService {
             throw new IllegalArgumentException("No se puede transferir dinero a la misma cuenta de origen.");
         }
 
-        Cuenta cuentaOrigen = buscarPorCbu(cbuOrigen);
-        Cuenta cuentaDestino = buscarPorCbu(cbuDestino);
+        Cuenta cuentaOrigen = cuentaRepository.findByCbu(cbuOrigen)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el CBU proporcionado."));
+        Cuenta cuentaDestino = cuentaRepository.findByCbu(cbuDestino)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el CBU proporcionado."));
 
         if (cuentaOrigen.getSaldo().compareTo(monto) < 0) {
             throw new IllegalArgumentException("Fondos insuficientes en la cuenta de origen.");
@@ -234,7 +246,43 @@ public class CuentaService {
         cuenta.addMovimiento(movimiento);
     }
 
-    public List<MovimientoDTO> listarMovimientosPorCuenta(String alias) {
+    public List<CuentaSalidaDTO> listarCuentas(){
+        List<Cuenta> cuentas = cuentaRepository.findAll();
+        return cuentas.stream()
+                .map(cuenta -> CuentaSalidaDTO.builder()
+                        .cuentaId(cuenta.getCuentaId())
+                        .cbu(cuenta.getCbu())
+                        .alias(cuenta.getAlias())
+                        .saldo(cuenta.getSaldo())
+                        .tipoCuenta(cuenta.getTipoCuenta())
+                        .fechaCreacion(cuenta.getFechaCreacion())
+                        .usuarioId(cuenta.getUsuario().getUsuarioId())
+                        .build())
+                .toList();
+    }
+
+    public List<CuentaSalidaDTO> listarCuentasPorUsuario(Long usuarioId){
+        if (usuarioId == null) {
+            throw new IllegalArgumentException("El ID del usuario no puede ser nulo.");
+        }
+        List<Cuenta> cuentas = cuentaRepository.findAll();
+
+        return cuentas.stream()
+                .filter(cuenta -> cuenta.getUsuario().getUsuarioId().equals(usuarioId))
+                .map(cuenta -> CuentaSalidaDTO.builder()
+                        .cuentaId(cuenta.getCuentaId())
+                        .cbu(cuenta.getCbu())
+                        .alias(cuenta.getAlias())
+                        .saldo(cuenta.getSaldo())
+                        .tipoCuenta(cuenta.getTipoCuenta())
+                        .fechaCreacion(cuenta.getFechaCreacion())
+                        .usuarioId(cuenta.getUsuario().getUsuarioId())
+                        .build())
+                .toList();
+    }
+
+    //Poner en movimientoService
+    /*public List<MovimientoDTO> listarMovimientosPorCuenta(String alias) {
         Cuenta cuenta = cuentaRepository.findByAlias(alias)
                 .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el alias proporcionado."));
 
@@ -254,5 +302,5 @@ public class CuentaService {
                         movimiento.getTipoMovimiento(),
                         movimiento.getDescripcion()))
                 .toList();
-    }
+    }*/
 }
