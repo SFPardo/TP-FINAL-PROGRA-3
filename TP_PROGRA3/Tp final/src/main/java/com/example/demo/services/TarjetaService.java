@@ -1,6 +1,5 @@
 package com.example.demo.services;
 
-import com.example.demo.dto.MovimientoDTO;
 import com.example.demo.entities.Tarjeta;
 import com.example.demo.repositories.MovimientoRepository;
 import com.example.demo.repositories.TarjetaRepository;
