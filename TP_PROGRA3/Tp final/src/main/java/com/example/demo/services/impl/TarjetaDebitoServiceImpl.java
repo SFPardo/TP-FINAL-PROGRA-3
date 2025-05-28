@@ -36,6 +36,12 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
                 .filter(t -> t instanceof TarjetaDebito)
                 .map(t -> (TarjetaDebito) t);
     }
+    @Override
+    public Optional<TarjetaDebito> findByNumero(String numero) {
+        return repository.findByNumero(numero)
+                .filter(t -> t instanceof TarjetaDebito)
+                .map(t -> (TarjetaDebito) t);
+    }
 
     @Override
     public List<TarjetaDebito> listarTodas() {

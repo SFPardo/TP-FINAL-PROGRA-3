@@ -117,6 +117,14 @@ public class CuentaServiceImpl implements CuentaService {
                 .usuarioId(cuentaOptional.get().getUsuario().getUsuarioId())
                 .build();
     }
+    @Override
+    public Cuenta buscarPorId(Long cuentaId) {
+        if (cuentaId == null) {
+            throw new IllegalArgumentException("El ID de la cuenta no puede ser nulo.");
+        }
+        return cuentaRepository.findById(cuentaId)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el ID proporcionado."));
+    }
 
     @Override
     public CuentaSalidaDTO buscarPorAlias(String alias) {

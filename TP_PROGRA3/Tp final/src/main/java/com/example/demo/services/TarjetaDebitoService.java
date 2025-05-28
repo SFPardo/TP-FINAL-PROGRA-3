@@ -1,6 +1,7 @@
 package com.example.demo.services;
 
 import com.example.demo.dto.TarjetaDebitoDTO;
+import com.example.demo.entities.Tarjeta;
 import com.example.demo.entities.TarjetaDebito;
 import java.util.List;
 import java.util.Optional;
@@ -8,6 +9,7 @@ import java.util.Optional;
 public interface TarjetaDebitoService {
     TarjetaDebito crear(TarjetaDebitoDTO dto);
     Optional<TarjetaDebito> buscarPorId(Long id);
+    Optional<TarjetaDebito> findByNumero(String numero);
     List<TarjetaDebito> listarTodas();
     TarjetaDebito actualizar(TarjetaDebitoDTO dto);
     void eliminar(Long id);

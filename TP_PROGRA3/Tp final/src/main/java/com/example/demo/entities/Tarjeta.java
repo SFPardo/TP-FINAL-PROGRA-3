@@ -52,5 +52,5 @@ public abstract class Tarjeta {
             referencedColumnName = "tarjetaId"
     )
 
-    private List<Movimiento> movimientoList;
+    private List<MovimientoTarjeta> movimientoList;
 }

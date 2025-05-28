@@ -10,5 +10,4 @@ import java.util.Optional;
 @Repository
 public interface MovimientoRepository extends JpaRepository<Movimiento, Long> {
     List<Movimiento> findByCuentaIdOrderByFechaDesc(Long cuentaId);
-    List<Movimiento> findByTarjetaIdOrderByFechaDesc(Long tarjetaId);
 }

@@ -1,5 +1,5 @@
 package com.example.demo.entities;
-import com.example.demo.entities.enums.TipoMovimiento;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,13 +14,12 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 @Table(
-        name = "tbl_movimiento"
+        name = "tbl_movimiento_tarjeta"
 )
-
-public class Movimiento {
+public class MovimientoTarjeta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long movimientoId;
+    private Long movimientoTarjetaId;
     private BigDecimal monto;
     private LocalDate fecha;
     private String descripcion;
@@ -28,11 +27,13 @@ public class Movimiento {
     protected void alCrear(){
         fecha = LocalDate.now();
     }
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "cuenta_id",
-            referencedColumnName = "cuentaId",
-            nullable = false
+    @ManyToOne(
+            fetch = FetchType.LAZY
     )
-    private Cuenta cuenta;
+    @JoinColumn(
+            name = "tarjeta_id",
+            referencedColumnName = "tarjetaId"
+    )
+    private Tarjeta tarjeta;
 }
+
