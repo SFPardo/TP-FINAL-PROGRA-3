@@ -2,9 +2,7 @@ package com.example.demo.controllers;
 
 import com.example.demo.dto.CuentaEntradaDTO;
 import com.example.demo.dto.CuentaSalidaDTO;
-import com.example.demo.dto.MovimientoDTO;
-import com.example.demo.entities.Cuenta;
-import com.example.demo.services.CuentaService;
+import com.example.demo.services.impl.CuentaServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,24 +10,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/cuentas")
 public class CuentaController {
 
     @Autowired
-    private CuentaService cuentaService;
+    private CuentaServiceImpl cuentaServiceImpl;
 
     @PostMapping("/crear")
     public ResponseEntity<CuentaEntradaDTO> crearCuenta(@Valid @RequestBody CuentaEntradaDTO dto) {
-        cuentaService.crearCuenta(dto);
+        cuentaServiceImpl.crearCuenta(dto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PutMapping("/{cuentaId}/{alias}")
     public ResponseEntity<String> actualizarAliasCuenta(@PathVariable Long cuentaId, @Valid @RequestBody String nuevoAlias) {
-        if(cuentaService.actualizarAliasPorId(cuentaId, nuevoAlias)){
+        if(cuentaServiceImpl.actualizarAliasPorId(cuentaId, nuevoAlias)){
             return ResponseEntity.ok("Alias de cuenta actualizado exitosamente");
         }else {
             return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body("El alias de la cuenta no ha sido actualizado");
@@ -38,42 +35,42 @@ public class CuentaController {
 
     @DeleteMapping("/{cuentaId}")
     public ResponseEntity<String> borrarCuenta(@PathVariable Long cuentaId) {
-        cuentaService.borrarCuenta(cuentaId);
+        cuentaServiceImpl.borrarCuenta(cuentaId);
         return ResponseEntity.noContent().build();
     }
     @GetMapping("/{cbu}")
     public ResponseEntity<CuentaSalidaDTO> buscarPorCbu(@RequestParam String cbu) {
-        CuentaSalidaDTO cuenta = cuentaService.buscarPorCbu(cbu);
+        CuentaSalidaDTO cuenta = cuentaServiceImpl.buscarPorCbu(cbu);
         return ResponseEntity.ok(cuenta);
     }
 
     @GetMapping("/{alias}")
     public ResponseEntity<CuentaSalidaDTO> buscarPorAlias(@RequestParam String alias) {
-        CuentaSalidaDTO cuenta = cuentaService.buscarPorAlias(alias);
+        CuentaSalidaDTO cuenta = cuentaServiceImpl.buscarPorAlias(alias);
         return ResponseEntity.ok(cuenta);
     }
 
     @PutMapping("/{cuentaId}/limite-sobregiro")
     public ResponseEntity<String> cambiarLimiteSobregiro(@PathVariable Long cuentaId, @Valid @RequestParam BigDecimal nuevoLimite) {
-        cuentaService.cambiarLimiteSobregiro(cuentaId, nuevoLimite);
+        cuentaServiceImpl.cambiarLimiteSobregiro(cuentaId, nuevoLimite);
         return ResponseEntity.ok("Límite de sobregiro cambiado exitosamente");
     }
 
     @PostMapping("/transferir")
     public ResponseEntity<String> transferir(@RequestParam String cbuOrigen, @RequestParam String cbuDestino, @RequestParam BigDecimal monto) {
-        cuentaService.transferenciaEntreCuentas(cbuOrigen, cbuDestino, monto);
+        cuentaServiceImpl.transferenciaEntreCuentas(cbuOrigen, cbuDestino, monto);
         return ResponseEntity.ok("Transferencia realizada exitosamente");
     }
 
     @PostMapping("/depositar")
     public ResponseEntity<String> depositar(@RequestParam String alias, @RequestParam BigDecimal monto) {
-        cuentaService.depositarDinero(alias, monto);
+        cuentaServiceImpl.depositarDinero(alias, monto);
         return ResponseEntity.ok("Depósito realizado exitosamente");
     }
 
     @PostMapping("/retirar")
     public ResponseEntity<String> retirar(@RequestParam String alias, @RequestParam BigDecimal monto) {
-        cuentaService.retirarDinero(alias, monto);
+        cuentaServiceImpl.retirarDinero(alias, monto);
         return ResponseEntity.ok("Retiro realizado exitosamente");
     }
 

@@ -10,13 +10,10 @@ import java.util.Optional;
 
 @Service
 public class MovimientoServices {
-    @Autowired
 
+    @Autowired
     private MovimientoRepository movimientoRepository;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public Movimiento crearMovimiento(Movimiento movimiento) {
         return movimientoRepository.save(movimiento);
