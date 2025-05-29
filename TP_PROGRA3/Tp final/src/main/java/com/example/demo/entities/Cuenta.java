@@ -58,7 +58,7 @@ public class Cuenta {
             fetch = FetchType.LAZY,
             orphanRemoval = true
     )
-    private List<Movimiento> movimientoList = new ArrayList<>();
+    private List<MovimientoCuenta> movimientoList = new ArrayList<>();
     @OneToMany(
             mappedBy = "cuenta",
             cascade = CascadeType.ALL,
@@ -67,7 +67,7 @@ public class Cuenta {
     )
     private List<Tarjeta> tarjetaList = new ArrayList<>();
 
-    public void addMovimiento(Movimiento movimiento) {
+    public void addMovimiento(MovimientoCuenta movimiento) {
         movimientoList.add(movimiento);
         movimiento.setCuenta(this);
     }

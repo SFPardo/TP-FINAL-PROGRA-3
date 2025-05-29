@@ -14,6 +14,7 @@ public interface CuentaService {
     void borrarCuenta(Long cuentaId);
     CuentaSalidaDTO buscarPorCbu(String cbu);
     CuentaSalidaDTO buscarPorAlias(String alias);
+    Cuenta buscarPorId(Long cuentaId);
     void cambiarLimiteSobregiro(Long cuentaId, BigDecimal nuevoLimite);
     void transferenciaEntreCuentas(String cbuOrigen, String cbuDestino, BigDecimal monto);
     void retirarDinero(String alias, BigDecimal monto);

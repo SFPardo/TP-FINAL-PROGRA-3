@@ -39,6 +39,13 @@ public class TarjetaCreditoServiceImpl implements TarjetaCreditoService {
     }
 
     @Override
+    public Optional<TarjetaCredito> findByNumero(String numero) {
+        return repository.findByNumero(numero)
+                .filter(t -> t instanceof TarjetaCredito)
+                .map(t -> (TarjetaCredito) t);
+    }
+
+    @Override
     public List<TarjetaCredito> listarTodas() {
         return repository.findAll().stream()
                 .filter(t -> t instanceof TarjetaCredito)
