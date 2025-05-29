@@ -1,7 +1,7 @@
 package com.example.demo.services;
 
 import com.example.demo.entities.Tarjeta;
-import com.example.demo.repositories.MovimientoRepository;
+import com.example.demo.repositories.MovimientoCuentaRepository;
 import com.example.demo.repositories.TarjetaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ public class TarjetaService {
     @Autowired
     private TarjetaRepository tarjetaRepository;
     @Autowired
-    private MovimientoRepository movimientoRepository;
+    private MovimientoCuentaRepository movimientoCuentaRepository;
 
     public Tarjeta crearTarjeta(Tarjeta tarjeta) {
         return tarjetaRepository.save(tarjeta);

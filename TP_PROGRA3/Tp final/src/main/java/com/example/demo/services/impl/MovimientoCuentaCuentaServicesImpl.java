@@ -4,8 +4,9 @@ import com.example.demo.dto.MovimientoCuentaEntradaDTO;
 import com.example.demo.dto.MovimientoCuentaSalidaDTO;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.Movimiento;
-import com.example.demo.repositories.MovimientoRepository;
-import com.example.demo.services.MovimientoService;
+import com.example.demo.entities.MovimientoCuenta;
+import com.example.demo.repositories.MovimientoCuentaRepository;
+import com.example.demo.services.MovimientoCuentaService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,10 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-public class MovimientoServicesImpl implements MovimientoService {
+public class MovimientoCuentaCuentaServicesImpl implements MovimientoCuentaService {
 
     @Autowired
-    private MovimientoRepository movimientoRepository;
+    private MovimientoCuentaRepository movimientoCuentaRepository;
     @Autowired
     private CuentaServiceImpl cuentaService;
 
@@ -38,31 +39,29 @@ public class MovimientoServicesImpl implements MovimientoService {
         if(dto.getMonto() == null || dto.getMonto().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor que cero");
         }
-        return Movimiento.builder()
+        return MovimientoCuenta.builder()
                 .cuenta(cuenta)
                 .descripcion(dto.getDescripcion())
-                .tipoMovimiento(dto.getTipoMovimiento())
                 .monto(dto.getMonto())
                 .build();
     }
     @Override
     public MovimientoCuentaSalidaDTO buscarMovimientoPorId(Long id) {
-        Movimiento movimiento = findById(id);
+        MovimientoCuenta movimiento = findById(id);
         return MovimientoCuentaSalidaDTO.builder()
                 .movimientoId(movimiento.getMovimientoId())
                 .cuentaId(movimiento.getCuenta().getCuentaId())
                 .descripcion(movimiento.getDescripcion())
-                .tipoMovimiento(movimiento.getTipoMovimiento())
                 .monto(movimiento.getMonto())
                 .fecha(movimiento.getFecha())
                 .build();
     }
     @Override
-    public Movimiento findById(Long id) {
+    public MovimientoCuenta findById(Long id) {
         if(id == null) {
             throw new IllegalArgumentException("El ID del movimiento no puede ser nulo");
         }
-        return movimientoRepository.findById(id)
+        return movimientoCuentaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No se encontró un movimiento con el ID proporcionado"));
     }
     @Override
@@ -71,12 +70,12 @@ public class MovimientoServicesImpl implements MovimientoService {
         if(id == null) {
             throw new IllegalArgumentException("El ID del movimiento no puede ser nulo");
         }
-        movimientoRepository.deleteById(id);
+        movimientoCuentaRepository.deleteById(id);
     }
 
     @Override
     public List<MovimientoCuentaSalidaDTO> listarMovimientos() {
-        List<Movimiento> movimientos = movimientoRepository.findAll();
+        List<MovimientoCuenta> movimientos = movimientoCuentaRepository.findAll();
         return movimientos.stream().map(movimiento -> MovimientoCuentaSalidaDTO.builder()
                 .movimientoId(movimiento.getMovimientoId())
                 .cuentaId(movimiento.getCuenta().getCuentaId())
@@ -91,7 +90,7 @@ public class MovimientoServicesImpl implements MovimientoService {
         if(cuentaId == null) {
             throw new IllegalArgumentException("El ID de la cuenta no puede ser nulo");
         }
-        List<Movimiento> movimientos = movimientoRepository.findByCuentaIdOrderByFechaDesc(cuentaId);
+        List<MovimientoCuenta> movimientos = movimientoCuentaRepository.findByCuentaIdOrderByFechaDesc(cuentaId);
         return movimientos.stream().map(movimiento -> MovimientoCuentaSalidaDTO.builder()
                 .movimientoId(movimiento.getMovimientoId())
                 .cuentaId(movimiento.getCuenta().getCuentaId())

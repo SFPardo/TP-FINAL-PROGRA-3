@@ -4,6 +4,7 @@ import com.example.demo.dto.CuentaEntradaDTO;
 import com.example.demo.dto.CuentaSalidaDTO;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.Movimiento;
+import com.example.demo.entities.MovimientoCuenta;
 import com.example.demo.entities.Usuario;
 import com.example.demo.entities.enums.TipoCuenta;
 import com.example.demo.entities.enums.TipoMovimiento;
@@ -187,14 +188,12 @@ public class CuentaServiceImpl implements CuentaService {
         cuentaOrigen.setSaldo(cuentaOrigen.getSaldo().subtract(monto));
         cuentaDestino.setSaldo(cuentaDestino.getSaldo().add(monto));
 
-        Movimiento salida = Movimiento.builder()
-                .tipoMovimiento(TipoMovimiento.EGRESO)
+        MovimientoCuenta salida = MovimientoCuenta.builder()
                 .monto(monto)
                 .descripcion("Transferencia a " + cuentaDestino.getAlias())
                 .cuenta(cuentaOrigen)
                 .build();
-        Movimiento entrada = Movimiento.builder()
-                .tipoMovimiento(TipoMovimiento.INGRESO)
+        MovimientoCuenta entrada = MovimientoCuenta.builder()
                 .monto(monto)
                 .descripcion("Transferencia de " + cuentaOrigen.getAlias())
                 .cuenta(cuentaDestino)
@@ -223,8 +222,7 @@ public class CuentaServiceImpl implements CuentaService {
 
         cuenta.setSaldo(cuenta.getSaldo().subtract(monto));
 
-        Movimiento movimiento = Movimiento.builder()
-                .tipoMovimiento(TipoMovimiento.EGRESO)
+        MovimientoCuenta movimiento = MovimientoCuenta.builder()
                 .monto(monto)
                 .descripcion("Extracción de dinero")
                 .cuenta(cuenta)
@@ -248,8 +246,7 @@ public class CuentaServiceImpl implements CuentaService {
 
         cuenta.setSaldo(cuenta.getSaldo().add(monto));
 
-        Movimiento movimiento = Movimiento.builder()
-                .tipoMovimiento(TipoMovimiento.INGRESO)
+        MovimientoCuenta movimiento = MovimientoCuenta.builder()
                 .monto(monto)
                 .descripcion("Depósito de dinero")
                 .cuenta(cuenta)
@@ -294,27 +291,4 @@ public class CuentaServiceImpl implements CuentaService {
                         .build())
                 .toList();
     }
-
-    //Poner en movimientoService
-    /*public List<MovimientoDTO> listarMovimientosPorCuenta(String alias) {
-        Cuenta cuenta = cuentaRepository.findByAlias(alias)
-                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el alias proporcionado."));
-
-        List<Movimiento> movimientosCuenta = movimientoRepository.findByCuentaIdOrderByFechaDesc(cuenta.getCuentaId());
-
-        List<Tarjeta> tarjetas = tarjetaRepository.findByCuentaId(cuenta.getCuentaId());
-        for (Tarjeta tarjeta : tarjetas) {
-            List<Movimiento> movimientosTarjeta = movimientoRepository.findByTarjetaIdOrderByFechaDesc(tarjeta.getTarjetaId());
-            movimientosCuenta.addAll(movimientosTarjeta);
-        }
-
-        return movimientosCuenta.stream()
-                .sorted((m1, m2) -> m2.getFecha().compareTo(m1.getFecha()))
-                .map(movimiento -> new MovimientoDTO(
-                        movimiento.getMonto(),
-                        movimiento.getFecha(),
-                        movimiento.getTipoMovimiento(),
-                        movimiento.getDescripcion()))
-                .toList();
-    }*/
 }

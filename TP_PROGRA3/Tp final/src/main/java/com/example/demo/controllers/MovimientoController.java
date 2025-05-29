@@ -2,7 +2,7 @@ package com.example.demo.controllers;
 
 import com.example.demo.entities.Movimiento;
 
-import com.example.demo.services.impl.MovimientoServicesImpl;
+import com.example.demo.services.impl.MovimientoCuentaCuentaServicesImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,22 +15,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MovimientoController {
 
-    private MovimientoServicesImpl movimientoServicesImpl;
+    private MovimientoCuentaCuentaServicesImpl movimientoCuentaServicesImpl;
 
     @PostMapping
     public ResponseEntity<Movimiento> crearMovimiento(@Valid @RequestBody Movimiento movimiento){
-        Movimiento nuevoMovimiento = movimientoServicesImpl.crearMovimiento(movimiento);
+        Movimiento nuevoMovimiento = movimientoCuentaServicesImpl.crearMovimiento(movimiento);
         return ResponseEntity.ok(nuevoMovimiento);
     }
 
     @GetMapping
     public ResponseEntity<List<Movimiento>> listarMovimientos(@Valid @RequestBody Movimiento movimiento){
-        return ResponseEntity.ok(movimientoServicesImpl.listarMovimientos());
+        return ResponseEntity.ok(movimientoCuentaServicesImpl.listarMovimientos());
     }
 
     @GetMapping("{id}")
     public ResponseEntity<Movimiento> buscarMovimientoPorId(@RequestParam Long id) {
-        return movimientoServicesImpl.buscarMovimientoPorId(id)
+        return movimientoCuentaServicesImpl.buscarMovimientoPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -38,10 +38,10 @@ public class MovimientoController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarMovimiento(@PathVariable Long id) {
-        if (movimientoServicesImpl.buscarMovimientoPorId(id).isEmpty()) {
+        if (movimientoCuentaServicesImpl.buscarMovimientoPorId(id).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        movimientoServicesImpl.eliminarMovimientoPorId(id);
+        movimientoCuentaServicesImpl.eliminarMovimientoPorId(id);
         return ResponseEntity.noContent().build();
     }
 }

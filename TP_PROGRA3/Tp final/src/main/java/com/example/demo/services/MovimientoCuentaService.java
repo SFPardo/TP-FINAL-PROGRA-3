@@ -6,7 +6,7 @@ import com.example.demo.entities.Movimiento;
 
 import java.util.List;
 
-public interface MovimientoService {
+public interface MovimientoCuentaService {
     Movimiento crearMovimiento(MovimientoCuentaEntradaDTO dto);
     MovimientoCuentaSalidaDTO buscarMovimientoPorId(Long id);
     Movimiento findById(Long id);
