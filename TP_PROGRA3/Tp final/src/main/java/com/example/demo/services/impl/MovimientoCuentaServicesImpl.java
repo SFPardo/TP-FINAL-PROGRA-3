@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
-public class MovimientoCuentaCuentaServicesImpl implements MovimientoCuentaService {
+public class MovimientoCuentaServicesImpl implements MovimientoCuentaService {
 
     @Autowired
     private MovimientoCuentaRepository movimientoCuentaRepository;

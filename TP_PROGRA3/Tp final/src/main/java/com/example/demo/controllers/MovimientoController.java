@@ -2,7 +2,7 @@ package com.example.demo.controllers;
 
 import com.example.demo.entities.Movimiento;
 
-import com.example.demo.services.impl.MovimientoCuentaCuentaServicesImpl;
+import com.example.demo.services.impl.MovimientoCuentaServicesImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MovimientoController {
 
-    private MovimientoCuentaCuentaServicesImpl movimientoCuentaServicesImpl;
+    private MovimientoCuentaServicesImpl movimientoCuentaServicesImpl;
 
     @PostMapping
     public ResponseEntity<Movimiento> crearMovimiento(@Valid @RequestBody Movimiento movimiento){
