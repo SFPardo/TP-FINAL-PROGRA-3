@@ -50,8 +50,8 @@ public class CuentaController {
         return ResponseEntity.ok(cuenta);
     }
 
-    @PutMapping("/{cuentaId}/limite-sobregiro")
-    public ResponseEntity<String> cambiarLimiteSobregiro(@PathVariable Long cuentaId, @Valid @RequestParam BigDecimal nuevoLimite) {
+    @PutMapping("/{cuentaId}/{limite-sobregiro}")
+    public ResponseEntity<String> actualizarLimiteSobregiro(@PathVariable Long cuentaId, @Valid @RequestParam BigDecimal nuevoLimite) {
         cuentaServiceImpl.cambiarLimiteSobregiro(cuentaId, nuevoLimite);
         return ResponseEntity.ok("Límite de sobregiro cambiado exitosamente");
     }
@@ -72,24 +72,6 @@ public class CuentaController {
     public ResponseEntity<String> retirar(@RequestParam String alias, @RequestParam BigDecimal monto) {
         cuentaServiceImpl.retirarDinero(alias, monto);
         return ResponseEntity.ok("Retiro realizado exitosamente");
-    }
-
-    //Poner en MovimientoController
-    /*@GetMapping("/{alias}/movimientos")
-    public ResponseEntity<List<MovimientoDTO>> obtenerMovimientosCuenta(@PathVariable String alias) {
-        try {
-            List<MovimientoDTO> movimientos = cuentaService.listarMovimientosPorCuenta(alias);
-            return ResponseEntity.ok(movimientos);
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("No existe una cuenta")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // 400 Bad Request
-            }
-        } catch (Exception e) {
-            System.err.println("Error al obtener movimientos para el alias " + alias + ": " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }*/
     }
 
 }
