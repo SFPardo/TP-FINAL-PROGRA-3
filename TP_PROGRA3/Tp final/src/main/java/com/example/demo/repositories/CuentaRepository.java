@@ -22,14 +22,5 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
     @Transactional
     @Query("UPDATE Cuenta c SET c.alias = :nuevoAlias WHERE c.cuentaID = :id")
     int actualizarAliasPorId(@Param("id") Long id,@Param("nuevoAlias") String nuevoAlias);
-
-    @Modifying
-    @Transactional
-    @Query("UPDATE Cuenta c SET c.saldo = :nuevoSaldo WHERE c.cuentaID = :id")
-    void actualizarSaldoPorId(@Param("id") Long id, @Param("nuevoSaldo") BigDecimal nuevoSaldo);
-
-    @Modifying
-    @Transactional
-    @Query("UPDATE Cuenta c SET c.limiteSobregiro = :nuevoLimite WHERE c.cuentaID = :id")
-    void actualizarLimiteSobregiroPorId(@Param("id") Long id, @Param("nuevoLimite") BigDecimal nuevoLimite);
+    
 }

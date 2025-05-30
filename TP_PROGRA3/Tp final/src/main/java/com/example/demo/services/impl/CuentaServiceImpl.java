@@ -3,12 +3,11 @@ package com.example.demo.services.impl;
 import com.example.demo.dto.CuentaEntradaDTO;
 import com.example.demo.dto.CuentaSalidaDTO;
 import com.example.demo.entities.Cuenta;
-import com.example.demo.entities.Movimiento;
 import com.example.demo.entities.MovimientoCuenta;
 import com.example.demo.entities.Usuario;
 import com.example.demo.entities.enums.TipoCuenta;
-import com.example.demo.entities.enums.TipoMovimiento;
 import com.example.demo.repositories.CuentaRepository;
+import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.services.CuentaService;
 import com.example.demo.services.GeneradorAliasService;
 import com.example.demo.services.GeneradorCbuService;
@@ -26,7 +25,7 @@ public class CuentaServiceImpl implements CuentaService {
     @Autowired
     private CuentaRepository cuentaRepository;
     @Autowired
-    private UsuarioService usuarioService;
+    private UsuarioRepository usuarioRepository;
     @Autowired
     private GeneradorAliasService generadorAliasService;
     @Autowired
@@ -35,10 +34,8 @@ public class CuentaServiceImpl implements CuentaService {
     @Override
     @Transactional
     public Cuenta crearCuenta(CuentaEntradaDTO dto){
-        Usuario usuario = usuarioService.buscarUsuarioPorId(dto.getUsuarioId());
-        if(usuario == null){
-            throw new IllegalArgumentException("El usuario con el ID proporcionado no existe.");
-        }
+        Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
+                .orElseThrow(() -> new IllegalArgumentException("El usuario con el Id proporcionado no existe"));
         Cuenta cuenta = Cuenta.builder()
                 .usuario(usuario)
                 .build();
@@ -51,13 +48,7 @@ public class CuentaServiceImpl implements CuentaService {
 
         cuenta.setSaldo(BigDecimal.valueOf(0));
 
-        switch (dto.getTipoCuenta()){
-            case 1 -> cuenta.setTipoCuenta(TipoCuenta.CORRIENTE);
-            case 2 -> cuenta.setTipoCuenta(TipoCuenta.AHORRO_PESOS);
-            case 3 -> cuenta.setTipoCuenta(TipoCuenta.AHORRO_DOLARES);
-            case 4 -> cuenta.setTipoCuenta(TipoCuenta.SUELDO);
-            default -> throw new IllegalArgumentException("Tipo de cuenta no válido");
-        }
+        cuenta.setTipoCuenta(dto.getTipoCuenta());
 
         if(noEsCuentaCorriente(cuenta.getUsuario().getUsuarioId())){
             cuenta.setLimiteSobregiro(BigDecimal.valueOf(0));
@@ -155,12 +146,15 @@ public class CuentaServiceImpl implements CuentaService {
         }
         Cuenta cuenta = cuentaRepository.findById(cuentaId)
                 .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el id proporcionado."));
-
+        if(!cuenta.getTipoCuenta().equals(TipoCuenta.CORRIENTE)) {
+            throw new IllegalArgumentException("Solo las cuentas corrientes pueden tener limite de sobregiro");
+        }
         if (nuevoLimite.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("El nuevo límite no puede ser negativo.");
         }
 
         cuenta.setLimiteSobregiro(nuevoLimite);
+        cuentaRepository.save(cuenta);
     }
 
     @Override
@@ -201,6 +195,8 @@ public class CuentaServiceImpl implements CuentaService {
 
         cuentaOrigen.addMovimiento(salida);
         cuentaDestino.addMovimiento(entrada);
+        cuentaRepository.save(cuentaOrigen);
+        cuentaRepository.save(cuentaDestino);
     }
 
     @Override
@@ -229,6 +225,7 @@ public class CuentaServiceImpl implements CuentaService {
                 .build();
 
         cuenta.addMovimiento(movimiento);
+        cuentaRepository.save(cuenta);
     }
 
     @Override
@@ -253,6 +250,7 @@ public class CuentaServiceImpl implements CuentaService {
                 .build();
 
         cuenta.addMovimiento(movimiento);
+        cuentaRepository.save(cuenta);
     }
 
     @Override

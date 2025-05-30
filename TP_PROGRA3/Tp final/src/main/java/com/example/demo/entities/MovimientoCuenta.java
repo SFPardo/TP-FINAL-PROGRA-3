@@ -12,9 +12,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-@Table(
-        name = "tbl_movimiento_cuenta"
-)
+
 
 public class MovimientoCuenta extends Movimiento {
     @ManyToOne(fetch = FetchType.LAZY)

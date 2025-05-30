@@ -15,16 +15,15 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-@Table(
-        name = "tbl_movimiento_tarjeta"
-)
+
 public class MovimientoTarjeta extends Movimiento{
     @ManyToOne(
             fetch = FetchType.LAZY
     )
     @JoinColumn(
             name = "tarjeta_id",
-            referencedColumnName = "tarjetaId"
+            referencedColumnName = "tarjetaId",
+            nullable = false
     )
     private Tarjeta tarjeta;
 }
