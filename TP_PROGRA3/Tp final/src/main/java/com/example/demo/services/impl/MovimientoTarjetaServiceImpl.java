@@ -66,7 +66,6 @@ public class MovimientoTarjetaServiceImpl implements MovimientoTarjetaService {
     public MovimientoTarjetaSalidaDTO buscarMovimientoPorId(Long id) {
         MovimientoTarjeta movimiento = findById(id);
         return MovimientoTarjetaSalidaDTO.builder()
-                .movimientoTarjetaId(movimiento.getMovimientoTarjetaId())
                 .tarjetaId(movimiento.getTarjeta().getTarjetaId())
                 .descripcion(movimiento.getDescripcion())
                 .monto(movimiento.getMonto())
@@ -93,7 +92,7 @@ public class MovimientoTarjetaServiceImpl implements MovimientoTarjetaService {
     public List<MovimientoTarjetaSalidaDTO> listarMovimientos() {
         List<MovimientoTarjeta> movimientos = movimientoTarjetaRepository.findAll();
         return movimientos.stream().map(movimiento -> MovimientoTarjetaSalidaDTO.builder()
-                .movimientoTarjetaId(movimiento.getMovimientoTarjetaId())
+                .movimientoTarjetaId(movimiento.getMovimientoId())
                 .tarjetaId(movimiento.getTarjeta().getTarjetaId())
                 .descripcion(movimiento.getDescripcion())
                 .monto(movimiento.getMonto())
@@ -108,7 +107,7 @@ public class MovimientoTarjetaServiceImpl implements MovimientoTarjetaService {
         }
         List<MovimientoTarjeta> movimientos = movimientoTarjetaRepository.findByNumeroOrderByFechaDesc(numero);
         return movimientos.stream().map(movimiento -> MovimientoTarjetaSalidaDTO.builder()
-                .movimientoTarjetaId(movimiento.getMovimientoTarjetaId())
+                .movimientoTarjetaId(movimiento.getMovimientoId())
                 .tarjetaId(movimiento.getTarjeta().getTarjetaId())
                 .descripcion(movimiento.getDescripcion())
                 .monto(movimiento.getMonto())

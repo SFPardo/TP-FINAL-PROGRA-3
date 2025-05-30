@@ -25,7 +25,7 @@ public class MovimientoCuentaServicesImpl implements MovimientoCuentaService {
 
     @Override
     @Transactional
-    public Movimiento crearMovimiento(MovimientoCuentaEntradaDTO dto){
+    public MovimientoCuenta crearMovimiento(MovimientoCuentaEntradaDTO dto){
         Cuenta cuenta = cuentaService.buscarPorId(dto.getCuentaId());
         if (cuenta == null) {
             throw new IllegalArgumentException("No se encontró una cuenta con el ID proporcionado");
@@ -33,17 +33,15 @@ public class MovimientoCuentaServicesImpl implements MovimientoCuentaService {
         if(dto.getDescripcion() == null || dto.getDescripcion().isEmpty()) {
             throw new IllegalArgumentException("La descripción no puede ser nula o vacía");
         }
-        if(dto.getTipoMovimiento() == null) {
-            throw new IllegalArgumentException("El tipo de movimiento no puede ser nulo");
-        }
         if(dto.getMonto() == null || dto.getMonto().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor que cero");
         }
-        return MovimientoCuenta.builder()
+        MovimientoCuenta movimiento = MovimientoCuenta.builder()
                 .cuenta(cuenta)
-                .descripcion(dto.getDescripcion())
                 .monto(dto.getMonto())
+                .descripcion(dto.getDescripcion())
                 .build();
+        return movimientoCuentaRepository.save(movimiento);
     }
     @Override
     public MovimientoCuentaSalidaDTO buscarMovimientoPorId(Long id) {

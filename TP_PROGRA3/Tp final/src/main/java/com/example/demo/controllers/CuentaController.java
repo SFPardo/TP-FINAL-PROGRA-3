@@ -74,6 +74,18 @@ public class CuentaController {
         return ResponseEntity.ok("Retiro realizado exitosamente");
     }
 
+    @GetMapping("/listarCuentas")
+    public ResponseEntity<String> listarCuentas(){
+        cuentaServiceImpl.listarCuentas();
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+
+    @GetMapping("/{usuarioId}")
+    public ResponseEntity<String> listarCuentasUsuario(@Valid @RequestParam Long usuarioId){
+        cuentaServiceImpl.listarCuentasPorUsuario(usuarioId);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+
 }
 
 

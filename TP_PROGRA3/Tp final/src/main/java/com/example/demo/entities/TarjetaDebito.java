@@ -2,15 +2,14 @@ package com.example.demo.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @DiscriminatorValue("DEBITO")
 @Getter
 @Setter
 @ToString
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@SuperBuilder
 @Table(
         name = "tbl_tarjeta_debito"
 )

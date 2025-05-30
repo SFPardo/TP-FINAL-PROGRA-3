@@ -1,6 +1,8 @@
 package com.example.demo.dto;
 
 import lombok.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -15,7 +17,7 @@ public class TarjetaCreditoDTO {
     private int codigoSeguridad;
     private boolean bloqueada;
     private String marca;
-    private double limite;
+    private BigDecimal limite;
     private long cuentaId;
 
 }

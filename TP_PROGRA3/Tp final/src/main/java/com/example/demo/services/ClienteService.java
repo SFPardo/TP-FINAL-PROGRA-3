@@ -24,7 +24,9 @@ import java.util.UUID;
 public class ClienteService {
     @Autowired
     private final ClienteRepository clienteRepository;
+    @Autowired
     private final UsuarioRepository usuarioRepository;
+    @Autowired
     private final CuentaRepository cuentaRepository;
 
     public Cliente crearCliente(Cliente cliente) {
