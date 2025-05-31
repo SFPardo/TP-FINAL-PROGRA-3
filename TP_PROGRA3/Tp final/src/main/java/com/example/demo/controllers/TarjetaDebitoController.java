@@ -1,7 +1,7 @@
 package com.example.demo.controllers;
 
-import com.example.demo.dto.TarjetaDebitoDTO;
-import com.example.demo.entities.TarjetaDebito;
+import com.example.demo.dto.TarjetaDebitoEntradaDTO;
+import com.example.demo.dto.TarjetaDebitoSalidaDTO;
 import com.example.demo.services.TarjetaDebitoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,25 +17,27 @@ public class TarjetaDebitoController {
     private TarjetaDebitoService service;
 
     @PostMapping
-    public ResponseEntity<TarjetaDebito> crear(@RequestBody TarjetaDebitoDTO dto) {
+    public ResponseEntity<TarjetaDebitoSalidaDTO> crear(@RequestBody TarjetaDebitoEntradaDTO dto) {
         return ResponseEntity.ok(service.crear(dto));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TarjetaDebito> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<TarjetaDebitoSalidaDTO> buscarPorId(@PathVariable Long id) {
         return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public List<TarjetaDebito> listarTodas() {
+    public List<TarjetaDebitoSalidaDTO> listarTodas() {
         return service.listarTodas();
     }
 
-    @PutMapping
-    public ResponseEntity<TarjetaDebito> actualizar(@RequestBody TarjetaDebitoDTO dto) {
-        return ResponseEntity.ok(service.actualizar(dto));
+    @PutMapping("/{id}")
+    public ResponseEntity<TarjetaDebitoSalidaDTO> actualizar(
+            @PathVariable Long id,
+            @RequestBody TarjetaDebitoEntradaDTO dto) {
+        return ResponseEntity.ok(service.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
