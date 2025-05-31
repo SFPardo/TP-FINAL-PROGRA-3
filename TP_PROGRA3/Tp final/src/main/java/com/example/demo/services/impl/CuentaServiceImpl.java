@@ -6,11 +6,10 @@ import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.MovimientoCuenta;
 import com.example.demo.entities.Usuario;
 import com.example.demo.entities.enums.TipoCuenta;
+import com.example.demo.entities.enums.TipoMovimiento;
 import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.services.CuentaService;
-import com.example.demo.services.GeneradorAliasService;
-import com.example.demo.services.GeneradorCbuService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,9 @@ public class CuentaServiceImpl implements CuentaService {
     @Autowired
     private UsuarioRepository usuarioRepository;
     @Autowired
-    private GeneradorAliasService generadorAliasService;
+    private GeneradorAliasServiceImpl generadorAliasServiceImpl;
     @Autowired
-    private GeneradorCbuService generadorCbuService;
+    private GeneradorCbuServiceImpl generadorCbuServiceImpl;
 
     @Override
     @Transactional
@@ -39,10 +38,10 @@ public class CuentaServiceImpl implements CuentaService {
                 .usuario(usuario)
                 .build();
 
-        String cbu = generadorCbuService.generarCbu();
+        String cbu = generadorCbuServiceImpl.generarCbu();
         cuenta.setCbu(cbu);
 
-        String alias = generadorAliasService.generarAlias();
+        String alias = generadorAliasServiceImpl.generarAlias();
         cuenta.setAlias(alias);
 
         cuenta.setSaldo(BigDecimal.valueOf(0));
@@ -177,11 +176,13 @@ public class CuentaServiceImpl implements CuentaService {
                 .monto(monto)
                 .descripcion("Transferencia a " + cuentaDestino.getAlias())
                 .cuenta(cuentaOrigen)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
                 .build();
         MovimientoCuenta entrada = MovimientoCuenta.builder()
                 .monto(monto)
                 .descripcion("Transferencia de " + cuentaOrigen.getAlias())
                 .cuenta(cuentaDestino)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
                 .build();
 
         cuentaOrigen.addMovimiento(salida);
@@ -213,6 +214,7 @@ public class CuentaServiceImpl implements CuentaService {
                 .monto(monto)
                 .descripcion("Extracción de dinero")
                 .cuenta(cuenta)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
                 .build();
 
         cuenta.addMovimiento(movimiento);
@@ -238,6 +240,7 @@ public class CuentaServiceImpl implements CuentaService {
                 .monto(monto)
                 .descripcion("Depósito de dinero")
                 .cuenta(cuenta)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
                 .build();
 
         cuenta.addMovimiento(movimiento);

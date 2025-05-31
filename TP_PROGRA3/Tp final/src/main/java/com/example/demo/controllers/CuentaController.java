@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import com.example.demo.dto.CuentaEntradaDTO;
 import com.example.demo.dto.CuentaSalidaDTO;
 import com.example.demo.services.impl.CuentaServiceImpl;
+import com.example.demo.services.impl.DebitoAutomaticoServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,11 +18,19 @@ public class CuentaController {
 
     @Autowired
     private CuentaServiceImpl cuentaServiceImpl;
+    @Autowired
+    private DebitoAutomaticoServiceImpl debitoAutomaticoServiceImpl;
 
     @PostMapping
     public ResponseEntity<CuentaEntradaDTO> crearCuenta(@Valid @RequestBody CuentaEntradaDTO dto) {
         cuentaServiceImpl.crearCuenta(dto);
         return new ResponseEntity<>(HttpStatus.CREATED);
+    }
+
+    @PostMapping("/{cuentaId}/debitoAutomatico")
+    public ResponseEntity<String> programarDebitoAutomatico(@PathVariable Long cuentaId, @Valid @RequestBody BigDecimal monto, @Valid @RequestBody String descripcion) {
+        debitoAutomaticoServiceImpl.programarDebitoAutomatico(cuentaId, monto, descripcion);
+        return ResponseEntity.ok("Débito automático programado exitosamente");
     }
 
     @PatchMapping("/{cuentaId}/alias")
