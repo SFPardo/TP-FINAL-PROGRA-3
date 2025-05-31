@@ -1,5 +1,7 @@
 package com.example.demo.entities;
 import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 @Getter
@@ -10,8 +12,12 @@ import lombok.*;
 @Embeddable
 @Builder
 public class Domicilio {
+    @NotBlank(message = "La provincia es obligatoria")
     private String provincia;
+    @NotBlank(message = "La ciudad es obligatoria")
     private String ciudad;
+    @NotBlank(message = "La calle es obligatoria")
     private String calle;
+    @Min(value = 1, message = "El número debe ser mayor o igual a 1")
     private int altura;
 }
