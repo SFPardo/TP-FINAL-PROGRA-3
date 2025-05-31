@@ -1,10 +1,13 @@
 package com.example.demo.controllers;
+import com.example.demo.dto.ClienteSalidaDTO;
+import com.example.demo.dto.DomicilioEntradaSalidaDTO;
 import com.example.demo.entities.Cliente;
-import com.example.demo.dto.ClienteDTO;
+import com.example.demo.dto.ClienteEntradaDTO;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.Domicilio;
 import com.example.demo.services.ClienteService;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,14 +25,20 @@ public class ClienteController {
     private final ClienteService clienteService;
 
     @PostMapping("/crear")
-    public ResponseEntity<Cliente> crearCliente(@RequestBody ClienteDTO dto) {
-        Cliente cliente = clienteService.crearClienteConUsuarioYCuenta(dto);
+    public ResponseEntity<ClienteSalidaDTO> crearCliente(@Valid @RequestBody ClienteEntradaDTO dto) {
+        ClienteSalidaDTO cliente = clienteService.crearClienteConUsuarioYCuenta(dto);
         return ResponseEntity.ok(cliente);
     }
     @GetMapping
     public ResponseEntity<List<Cliente>> obtenerTodos() {
         return ResponseEntity.ok(clienteService.obtenerTodosLosClientes());
     }
+
+    @GetMapping
+    public ResponseEntity<List<ClienteSalidaDTO>> obtenerTodosDTO() {
+        return ResponseEntity.ok(clienteService.obtenerTodosLosClientesDTO());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Cliente> obtenerPorId(@PathVariable Long id) {
         return clienteService.buscarClientePorId(id)
@@ -37,9 +46,9 @@ public class ClienteController {
                 .orElse(ResponseEntity.notFound().build());
     }
     @PutMapping("/{id}")
-    public ResponseEntity<Cliente> actualizarCliente(
+    public ResponseEntity<ClienteSalidaDTO> actualizarCliente(
             @PathVariable Long id,
-            @RequestBody ClienteDTO dto) {
+            @RequestBody ClienteEntradaDTO dto) {
         return ResponseEntity.ok(clienteService.actualizarClienteConDTO(id, dto));
     }
     @DeleteMapping("/{id}")
@@ -67,15 +76,11 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}/domicilio")
-    public ResponseEntity<Cliente> actualizarDomicilio(
+    public ResponseEntity<ClienteSalidaDTO> actualizarDomicilio(
             @PathVariable Long id,
-            @RequestBody Domicilio nuevoDomicilio) {
+            @RequestBody DomicilioEntradaSalidaDTO nuevoDomicilio) {
         return ResponseEntity.ok(clienteService.actualizarDomicilio(id, nuevoDomicilio));
     }
-
-
-
-
 
 
 }

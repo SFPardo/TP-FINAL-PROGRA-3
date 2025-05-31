@@ -1,6 +1,9 @@
 package com.example.demo.services;
 
-import com.example.demo.dto.ClienteDTO;
+import com.example.demo.dto.ClienteEntradaDTO;
+import com.example.demo.dto.ClienteSalidaDTO;
+import com.example.demo.dto.DomicilioEntradaSalidaDTO;
+import com.example.demo.dto.UsuarioSalidaDTO;
 import com.example.demo.entities.Cliente;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.Domicilio;
@@ -67,36 +70,93 @@ public class ClienteService {
         return clienteRepository.findAll();
     }
 
-    public Cliente crearClienteConUsuarioYCuenta(ClienteDTO dto){
+    private ClienteSalidaDTO mapToSalidaDTO(Cliente cliente) {
+        DomicilioEntradaSalidaDTO domicilioDTO = new DomicilioEntradaSalidaDTO();
+        domicilioDTO.setProvincia(cliente.getDomicilio().getProvincia());
+        domicilioDTO.setCiudad(cliente.getDomicilio().getCiudad());
+        domicilioDTO.setCalle(cliente.getDomicilio().getCalle());
+        domicilioDTO.setAltura(cliente.getDomicilio().getAltura());
+
+        UsuarioSalidaDTO usuarioDTO = new UsuarioSalidaDTO();
+        usuarioDTO.setUsuarioId(cliente.getUsuario().getUsuarioId());
+        usuarioDTO.setNombreUsuario(cliente.getUsuario().getNombreUsuario());
+
+        ClienteSalidaDTO salida = new ClienteSalidaDTO();
+        salida.setClienteId(cliente.getClienteId());
+        salida.setNombre(cliente.getNombre());
+        salida.setDni(cliente.getDni());
+        salida.setEmail(cliente.getEmail());
+        salida.setTelefono(cliente.getTelefono());
+        salida.setDomicilio(domicilioDTO);
+        salida.setUsuario(usuarioDTO);
+
+        return salida;
+    }
+
+    public List<ClienteSalidaDTO> obtenerTodosLosClientesDTO() {
+        return clienteRepository.findAll().stream()
+                .map(this::mapToSalidaDTO)
+                .toList();
+    }
+
+
+    public ClienteSalidaDTO crearClienteConUsuarioYCuenta(ClienteEntradaDTO dto){
+        if (clienteRepository.findByDni(dto.getDni()).isPresent()) {
+            throw new RuntimeException("Ya existe un cliente con ese DNI.");
+        }
+        if (clienteRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new RuntimeException("Ya existe un cliente con ese email.");
+        }
+        if (clienteRepository.findByTelefono(dto.getTelefono()).isPresent()) {
+            throw new RuntimeException("Ya existe un cliente con ese teléfono.");
+        }
+        if (usuarioRepository.findByUsername(dto.getUsuario().getNombreUsuario()).isPresent()) {
+            throw new RuntimeException("Ya existe un usuario con ese nombre de usuario.");
+        }
+        if (dto.getDomicilio() == null ||
+                dto.getDomicilio().getProvincia() == null ||
+                dto.getDomicilio().getCiudad() == null ||
+                dto.getDomicilio().getCalle() == null ||
+                dto.getDomicilio().getAltura() <= 0) {
+            throw new RuntimeException("Los datos del domicilio están incompletos.");
+        }
+
         Usuario usuario = Usuario.builder()
-                .nombreUsuario(dto.getNombreUsuario())
-                .pin(dto.getPin())
+                .nombreUsuario(dto.getUsuario().getNombreUsuario())
+                .pin(dto.getUsuario().getPin())
                 .build();
 
         Cuenta cuenta = Cuenta.builder()
-                .alias(generarAliasUnico()) // Método que podés implementar
-                .cbu(generarCBUUnico())     // Método que podés implementar
+                .alias(generarAliasUnico())
+                .cbu(generarCBUUnico())
                 .saldo(BigDecimal.ZERO)
                 .tipoCuenta(TipoCuenta.AHORRO_PESOS)
                 .limiteSobregiro(BigDecimal.ZERO)
-                .usuario(usuario) // Asociar el usuario a la cuenta
+                .usuario(usuario)
                 .build();
 
         usuario.setCuentaList(List.of(cuenta));
+
+        Domicilio domicilio = Domicilio.builder()
+                .provincia(dto.getDomicilio().getProvincia())
+                .ciudad(dto.getDomicilio().getCiudad())
+                .calle(dto.getDomicilio().getCalle())
+                .altura(dto.getDomicilio().getAltura())
+                .build();
 
         Cliente cliente = Cliente.builder()
                 .nombre(dto.getNombre())
                 .dni(dto.getDni())
                 .email(dto.getEmail())
                 .telefono(dto.getTelefono())
-                .domicilio(dto.getDomicilio())
-                .usuario(usuario) // Asociar el usuario al cliente
+                .domicilio(domicilio)
+                .usuario(usuario)
                 .build();
 
         usuario.setCliente(cliente);
 
-        return clienteRepository.save(cliente);
-
+        Cliente clienteGuardado = clienteRepository.save(cliente);
+        return mapToSalidaDTO(clienteGuardado);
     }
     //ESTAS FUNCIONES SON PROVISIONALES PARA GENERAR CBU Y ALIAS ÚNICOS
     //CAMBIAR CUANDO GENERADORALIASSERVICE Y GENERADORCBUSERVICE ESTÉN IMPLEMENTADOS
@@ -107,23 +167,39 @@ public class ClienteService {
         return "alias" + new Random().nextInt(100000);
     }
 
-    public Cliente actualizarClienteConDTO(Long id, ClienteDTO dto) {
+    public ClienteSalidaDTO actualizarClienteConDTO(Long id, ClienteEntradaDTO dto) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
         cliente.setNombre(dto.getNombre());
+        cliente.setDni(dto.getDni());
         cliente.setEmail(dto.getEmail());
         cliente.setTelefono(dto.getTelefono());
-        cliente.setDni(dto.getDni());
-        cliente.setDomicilio(dto.getDomicilio());
 
-        return clienteRepository.save(cliente);
+        cliente.setDomicilio(Domicilio.builder()
+                .provincia(dto.getDomicilio().getProvincia())
+                .ciudad(dto.getDomicilio().getCiudad())
+                .calle(dto.getDomicilio().getCalle())
+                .altura(dto.getDomicilio().getAltura())
+                .build());
+
+        return mapToSalidaDTO(clienteRepository.save(cliente));
     }
-    public Cliente actualizarDomicilio(Long id, Domicilio nuevoDomicilio) {
+
+
+    public ClienteSalidaDTO actualizarDomicilio(Long id, DomicilioEntradaSalidaDTO nuevoDomicilio) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
 
-        cliente.setDomicilio(nuevoDomicilio);
-        return clienteRepository.save(cliente);
+        cliente.setDomicilio(Domicilio.builder()
+                .provincia(nuevoDomicilio.getProvincia())
+                .ciudad(nuevoDomicilio.getCiudad())
+                .calle(nuevoDomicilio.getCalle())
+                .altura(nuevoDomicilio.getAltura())
+                .build());
+
+        return mapToSalidaDTO(clienteRepository.save(cliente));
     }
+
+
 }
