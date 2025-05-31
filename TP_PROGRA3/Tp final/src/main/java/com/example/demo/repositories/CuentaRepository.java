@@ -17,6 +17,7 @@ import java.util.Optional;
 public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
     Optional<Cuenta> findByCbu(String cbu);
     Optional<Cuenta> findByAlias(String alias);
+    List<Cuenta> findByUsuarioId(Long usuarioId);
 
     @Modifying
     @Transactional

@@ -11,7 +11,6 @@ import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.services.CuentaService;
 import com.example.demo.services.GeneradorAliasService;
 import com.example.demo.services.GeneradorCbuService;
-import com.example.demo.services.UsuarioService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -108,14 +107,6 @@ public class CuentaServiceImpl implements CuentaService {
                 .fechaCreacion(cuentaOptional.get().getFechaCreacion())
                 .usuarioId(cuentaOptional.get().getUsuario().getUsuarioId())
                 .build();
-    }
-    @Override
-    public Cuenta buscarPorId(Long cuentaId) {
-        if (cuentaId == null) {
-            throw new IllegalArgumentException("El ID de la cuenta no puede ser nulo.");
-        }
-        return cuentaRepository.findById(cuentaId)
-                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el ID proporcionado."));
     }
 
     @Override
@@ -274,10 +265,9 @@ public class CuentaServiceImpl implements CuentaService {
         if (usuarioId == null) {
             throw new IllegalArgumentException("El ID del usuario no puede ser nulo.");
         }
-        List<Cuenta> cuentas = cuentaRepository.findAll();
+        List<Cuenta> cuentas = cuentaRepository.findByUsuarioId(usuarioId);
 
         return cuentas.stream()
-                .filter(cuenta -> cuenta.getUsuario().getUsuarioId().equals(usuarioId))
                 .map(cuenta -> CuentaSalidaDTO.builder()
                         .cuentaId(cuenta.getCuentaId())
                         .cbu(cuenta.getCbu())

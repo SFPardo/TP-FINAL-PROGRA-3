@@ -4,8 +4,7 @@ import com.example.demo.dto.DomicilioEntradaSalidaDTO;
 import com.example.demo.entities.Cliente;
 import com.example.demo.dto.ClienteEntradaDTO;
 import com.example.demo.entities.Cuenta;
-import com.example.demo.entities.Domicilio;
-import com.example.demo.services.ClienteService;
+import com.example.demo.services.impl.ClienteServiceImpl;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -22,26 +21,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ClienteController {
 
-    private final ClienteService clienteService;
+    private final ClienteServiceImpl clienteServiceImpl;
 
     @PostMapping("/crear")
     public ResponseEntity<ClienteSalidaDTO> crearCliente(@Valid @RequestBody ClienteEntradaDTO dto) {
-        ClienteSalidaDTO cliente = clienteService.crearClienteConUsuarioYCuenta(dto);
+        ClienteSalidaDTO cliente = clienteServiceImpl.crearClienteConUsuarioYCuenta(dto);
         return ResponseEntity.ok(cliente);
     }
     @GetMapping
     public ResponseEntity<List<Cliente>> obtenerTodos() {
-        return ResponseEntity.ok(clienteService.obtenerTodosLosClientes());
+        return ResponseEntity.ok(clienteServiceImpl.obtenerTodosLosClientes());
     }
 
     @GetMapping
     public ResponseEntity<List<ClienteSalidaDTO>> obtenerTodosDTO() {
-        return ResponseEntity.ok(clienteService.obtenerTodosLosClientesDTO());
+        return ResponseEntity.ok(clienteServiceImpl.obtenerTodosLosClientesDTO());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Cliente> obtenerPorId(@PathVariable Long id) {
-        return clienteService.buscarClientePorId(id)
+        return clienteServiceImpl.buscarClientePorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -49,29 +48,29 @@ public class ClienteController {
     public ResponseEntity<ClienteSalidaDTO> actualizarCliente(
             @PathVariable Long id,
             @RequestBody ClienteEntradaDTO dto) {
-        return ResponseEntity.ok(clienteService.actualizarClienteConDTO(id, dto));
+        return ResponseEntity.ok(clienteServiceImpl.actualizarClienteConDTO(id, dto));
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarCliente(@PathVariable Long id) {
-        clienteService.eliminarCliente(id);
+        clienteServiceImpl.eliminarCliente(id);
         return ResponseEntity.noContent().build();
     }
     @DeleteMapping("/dni/{dni}")
     public ResponseEntity<Void> eliminarClientePorDni(@PathVariable String dni) {
-        clienteService.eliminarClientePorDni(dni);
+        clienteServiceImpl.eliminarClientePorDni(dni);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/cuentas")
     public ResponseEntity<List<Cuenta>> obtenerCuentas(@PathVariable Long id) {
-        Cliente cliente = clienteService.buscarClientePorId(id)
+        Cliente cliente = clienteServiceImpl.buscarClientePorId(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
         return ResponseEntity.ok(cliente.getUsuario().getCuentaList());
     }
 
     @GetMapping("/dni/{dni}")
     public ResponseEntity<Cliente> obtenerPorDni(@PathVariable String dni) {
-        Cliente cliente = clienteService.buscarClientePorDni(dni);
+        Cliente cliente = clienteServiceImpl.buscarClientePorDni(dni);
         return cliente != null ? ResponseEntity.ok(cliente) : ResponseEntity.notFound().build();
     }
 
@@ -79,7 +78,7 @@ public class ClienteController {
     public ResponseEntity<ClienteSalidaDTO> actualizarDomicilio(
             @PathVariable Long id,
             @RequestBody DomicilioEntradaSalidaDTO nuevoDomicilio) {
-        return ResponseEntity.ok(clienteService.actualizarDomicilio(id, nuevoDomicilio));
+        return ResponseEntity.ok(clienteServiceImpl.actualizarDomicilio(id, nuevoDomicilio));
     }
 
 

@@ -18,13 +18,13 @@ public class CuentaController {
     @Autowired
     private CuentaServiceImpl cuentaServiceImpl;
 
-    @PostMapping("/crear")
+    @PostMapping
     public ResponseEntity<CuentaEntradaDTO> crearCuenta(@Valid @RequestBody CuentaEntradaDTO dto) {
         cuentaServiceImpl.crearCuenta(dto);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PutMapping("/{cuentaId}/{alias}")
+    @PatchMapping("/{cuentaId}/alias")
     public ResponseEntity<String> actualizarAliasCuenta(@PathVariable Long cuentaId, @Valid @RequestBody String nuevoAlias) {
         if(cuentaServiceImpl.actualizarAliasPorId(cuentaId, nuevoAlias)){
             return ResponseEntity.ok("Alias de cuenta actualizado exitosamente");
@@ -38,50 +38,51 @@ public class CuentaController {
         cuentaServiceImpl.borrarCuenta(cuentaId);
         return ResponseEntity.noContent().build();
     }
-    @GetMapping("/{cbu}")
-    public ResponseEntity<CuentaSalidaDTO> buscarPorCbu(@RequestParam String cbu) {
-        CuentaSalidaDTO cuenta = cuentaServiceImpl.buscarPorCbu(cbu);
-        return ResponseEntity.ok(cuenta);
-    }
 
-    @GetMapping("/{alias}")
-    public ResponseEntity<CuentaSalidaDTO> buscarPorAlias(@RequestParam String alias) {
-        CuentaSalidaDTO cuenta = cuentaServiceImpl.buscarPorAlias(alias);
-        return ResponseEntity.ok(cuenta);
-    }
-
-    @PutMapping("/{cuentaId}/{limite-sobregiro}")
-    public ResponseEntity<String> actualizarLimiteSobregiro(@PathVariable Long cuentaId, @Valid @RequestParam BigDecimal nuevoLimite) {
+    @PatchMapping("/{cuentaId}/limiteSobregiro")
+    public ResponseEntity<String> actualizarLimiteSobregiro(@PathVariable Long cuentaId, @Valid @RequestBody BigDecimal nuevoLimite) {
         cuentaServiceImpl.cambiarLimiteSobregiro(cuentaId, nuevoLimite);
         return ResponseEntity.ok("Límite de sobregiro cambiado exitosamente");
     }
 
     @PostMapping("/transferir")
-    public ResponseEntity<String> transferir(@RequestParam String cbuOrigen, @RequestParam String cbuDestino, @RequestParam BigDecimal monto) {
+    public ResponseEntity<String> transferir(@RequestBody String cbuOrigen, @RequestBody String cbuDestino, @RequestParam BigDecimal monto) {
         cuentaServiceImpl.transferenciaEntreCuentas(cbuOrigen, cbuDestino, monto);
         return ResponseEntity.ok("Transferencia realizada exitosamente");
     }
 
     @PostMapping("/depositar")
-    public ResponseEntity<String> depositar(@RequestParam String alias, @RequestParam BigDecimal monto) {
+    public ResponseEntity<String> depositar(@RequestBody String alias, @RequestBody BigDecimal monto) {
         cuentaServiceImpl.depositarDinero(alias, monto);
         return ResponseEntity.ok("Depósito realizado exitosamente");
     }
 
     @PostMapping("/retirar")
-    public ResponseEntity<String> retirar(@RequestParam String alias, @RequestParam BigDecimal monto) {
+    public ResponseEntity<String> retirar(@RequestBody String alias, @RequestBody BigDecimal monto) {
         cuentaServiceImpl.retirarDinero(alias, monto);
         return ResponseEntity.ok("Retiro realizado exitosamente");
     }
 
-    @GetMapping("/listarCuentas")
+    @GetMapping("/{cbu}")
+    public ResponseEntity<CuentaSalidaDTO> buscarPorCbu(@PathVariable String cbu) {
+        CuentaSalidaDTO cuenta = cuentaServiceImpl.buscarPorCbu(cbu);
+        return ResponseEntity.ok(cuenta);
+    }
+
+    @GetMapping("/{alias}")
+    public ResponseEntity<CuentaSalidaDTO> buscarPorAlias(@PathVariable String alias) {
+        CuentaSalidaDTO cuenta = cuentaServiceImpl.buscarPorAlias(alias);
+        return ResponseEntity.ok(cuenta);
+    }
+
+    @GetMapping
     public ResponseEntity<String> listarCuentas(){
         cuentaServiceImpl.listarCuentas();
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/{usuarioId}")
-    public ResponseEntity<String> listarCuentasUsuario(@Valid @RequestParam Long usuarioId){
+    public ResponseEntity<String> listarCuentasUsuario(@Valid @RequestBody Long usuarioId){
         cuentaServiceImpl.listarCuentasPorUsuario(usuarioId);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }

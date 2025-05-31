@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 @Repository
 public interface MovimientoTarjetaRepository extends JpaRepository<MovimientoTarjeta, Long> {
-    List<MovimientoTarjeta> findByNumeroOrderByFechaDesc(String numero);
+    List<MovimientoTarjeta> findByTarjetaIdOrderByFechaDesc(Long tarjetaId);
 }

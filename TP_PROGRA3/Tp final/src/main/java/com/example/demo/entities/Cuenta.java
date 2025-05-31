@@ -12,7 +12,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@ToString(exclude = {"usuario", "movimientoList"})
+@ToString(exclude = {"usuario", "movimientoList", "tarjetaList"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -70,5 +70,10 @@ public class Cuenta {
     public void addMovimiento(MovimientoCuenta movimiento) {
         movimientoList.add(movimiento);
         movimiento.setCuenta(this);
+    }
+
+    public void addTarjeta(Tarjeta tarjeta) {
+        tarjetaList.add(tarjeta);
+        tarjeta.setCuenta(this);
     }
 }
