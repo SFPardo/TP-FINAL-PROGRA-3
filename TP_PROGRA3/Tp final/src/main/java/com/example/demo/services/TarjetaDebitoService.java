@@ -1,17 +1,17 @@
 package com.example.demo.services;
 
-import com.example.demo.dto.TarjetaDebitoDTO;
-import com.example.demo.entities.Tarjeta;
-import com.example.demo.entities.TarjetaDebito;
+import com.example.demo.dto.TarjetaDebitoEntradaDTO;
+import com.example.demo.dto.TarjetaDebitoSalidaDTO;
+
 import java.util.List;
 import java.util.Optional;
 
 public interface TarjetaDebitoService {
-    TarjetaDebito crear(TarjetaDebitoDTO dto);
-    Optional<TarjetaDebito> buscarPorId(Long id);
-    Optional<TarjetaDebito> findByNumero(String numero);
-    List<TarjetaDebito> listarTodas();
-    TarjetaDebito actualizar(TarjetaDebitoDTO dto);
+    TarjetaDebitoSalidaDTO crear(TarjetaDebitoEntradaDTO dto);
+    Optional<TarjetaDebitoSalidaDTO> buscarPorId(Long id);
+    Optional<TarjetaDebitoSalidaDTO> findByNumero(String numero);
+    List<TarjetaDebitoSalidaDTO> listarTodas();
+    TarjetaDebitoSalidaDTO actualizar(Long id, TarjetaDebitoEntradaDTO dto);
     void eliminar(Long id);
 
     boolean retirarDinero(Long tarjetaId, double monto);

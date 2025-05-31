@@ -5,19 +5,16 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Getter
-@Setter
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class TarjetaCreditoDTO {
+public class TarjetaCreditoSalidaDTO {
     private long tarjetaId;
     private String numero;
     private LocalDate vencimiento;
-    private int codigoSeguridad;
     private boolean bloqueada;
     private String marca;
     private BigDecimal limite;
     private long cuentaId;
-
 }

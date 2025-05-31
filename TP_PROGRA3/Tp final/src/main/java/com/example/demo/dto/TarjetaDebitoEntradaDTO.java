@@ -1,19 +1,17 @@
 package com.example.demo.dto;
 
 import lombok.*;
+
 import java.time.LocalDate;
 
-@Getter
-@Setter
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class TarjetaDebitoDTO {
-    private long tarjetaId;
+public class TarjetaDebitoEntradaDTO {
     private String numero;
     private LocalDate vencimiento;
     private int codigoSeguridad;
-    private boolean bloqueada;
     private String marca;
     private long cuentaId;
 }

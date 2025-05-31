@@ -1,9 +1,9 @@
 package com.example.demo.controllers;
 
-import com.example.demo.dto.TarjetaCreditoDTO;
-import com.example.demo.entities.TarjetaCredito;
+import com.example.demo.dto.TarjetaCreditoEntradaDTO;
+import com.example.demo.dto.TarjetaCreditoSalidaDTO;
 import com.example.demo.services.TarjetaCreditoService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,31 +11,34 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tarjetas/credito")
+@RequiredArgsConstructor
 public class TarjetaCreditoController {
 
-    @Autowired
-    private TarjetaCreditoService service;
+    private final TarjetaCreditoService service;
 
     @PostMapping
-    public ResponseEntity<TarjetaCredito> crear(@RequestBody TarjetaCreditoDTO dto) {
+    public ResponseEntity<TarjetaCreditoSalidaDTO> crear(@RequestBody TarjetaCreditoEntradaDTO dto) {
         return ResponseEntity.ok(service.crear(dto));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TarjetaCredito> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<TarjetaCreditoSalidaDTO> buscarPorId(@PathVariable Long id) {
         return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
-    public List<TarjetaCredito> listarTodas() {
-        return service.listarTodas();
+    public ResponseEntity<List<TarjetaCreditoSalidaDTO>> listarTodas() {
+        return ResponseEntity.ok(service.listarTodas());
     }
 
-    @PutMapping
-    public ResponseEntity<TarjetaCredito> actualizar(@RequestBody TarjetaCreditoDTO dto) {
-        return ResponseEntity.ok(service.actualizar(dto));
+    @PutMapping("/{id}")
+    public ResponseEntity<TarjetaCreditoSalidaDTO> actualizar(
+            @PathVariable Long id,
+            @RequestBody TarjetaCreditoEntradaDTO dto
+    ) {
+        return ResponseEntity.ok(service.actualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")

@@ -1,13 +1,15 @@
 package com.example.demo.services.impl;
 
-import com.example.demo.dto.TarjetaDebitoDTO;
+import com.example.demo.dto.TarjetaDebitoEntradaDTO;
+import com.example.demo.dto.TarjetaDebitoSalidaDTO;
+import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.TarjetaDebito;
-import com.example.demo.entities.Tarjeta;
-import com.example.demo.repositories.TarjetaRepository;
+import com.example.demo.repositories.CuentaRepository;
+import com.example.demo.repositories.TarjetaDebitoRepository;
 import com.example.demo.services.TarjetaDebitoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -16,50 +18,59 @@ import java.util.stream.Collectors;
 public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
 
     @Autowired
-    private TarjetaRepository repository;
+    private TarjetaDebitoRepository repository;
+
+    @Autowired
+    private CuentaRepository cuentaRepository;
+
+    private TarjetaDebitoSalidaDTO mapToSalidaDTO(TarjetaDebito tarjeta) {
+        return TarjetaDebitoSalidaDTO.builder()
+                .tarjetaId(tarjeta.getTarjetaId())
+                .numero(tarjeta.getNumero())
+                .vencimiento(tarjeta.getVencimiento())
+                .bloqueada(tarjeta.isBloqueada())
+                .marca(tarjeta.getMarca())
+                .cuentaId(tarjeta.getCuenta().getCuentaId())
+                .build();
+    }
 
     @Override
-    public TarjetaDebito crear(TarjetaDebitoDTO dto) {
+    public TarjetaDebitoSalidaDTO crear(TarjetaDebitoEntradaDTO dto) {
+        Cuenta cuenta = cuentaRepository.findById(dto.getCuentaId()).orElseThrow();
         TarjetaDebito tarjeta = TarjetaDebito.builder()
                 .numero(dto.getNumero())
                 .vencimiento(dto.getVencimiento())
                 .codigoSeguridad(dto.getCodigoSeguridad())
-                .bloqueada(dto.isBloqueada())
+                .bloqueada(false)
                 .marca(dto.getMarca())
+                .cuenta(cuenta)
                 .build();
-        return (TarjetaDebito) repository.save(tarjeta);
+        return mapToSalidaDTO(repository.save(tarjeta));
     }
 
     @Override
-    public Optional<TarjetaDebito> buscarPorId(Long id) {
-        return repository.findById(id)
-                .filter(t -> t instanceof TarjetaDebito)
-                .map(t -> (TarjetaDebito) t);
-    }
-    @Override
-    public Optional<TarjetaDebito> findByNumero(String numero) {
-        return repository.findByNumero(numero)
-                .filter(t -> t instanceof TarjetaDebito)
-                .map(t -> (TarjetaDebito) t);
+    public Optional<TarjetaDebitoSalidaDTO> buscarPorId(Long id) {
+        return repository.findById(id).map(this::mapToSalidaDTO);
     }
 
     @Override
-    public List<TarjetaDebito> listarTodas() {
+    public Optional<TarjetaDebitoSalidaDTO> findByNumero(String numero) {
+        return repository.findByNumero(numero).map(this::mapToSalidaDTO);
+    }
+
+    @Override
+    public List<TarjetaDebitoSalidaDTO> listarTodas() {
         return repository.findAll().stream()
-                .filter(t -> t instanceof TarjetaDebito)
-                .map(t -> (TarjetaDebito) t)
+                .map(this::mapToSalidaDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public TarjetaDebito actualizar(TarjetaDebitoDTO dto) {
-        TarjetaDebito tarjeta = (TarjetaDebito) repository.findById(dto.getTarjetaId())
-                .filter(t -> t instanceof TarjetaDebito)
-                .orElseThrow();
-        tarjeta.setBloqueada(dto.isBloqueada());
+    public TarjetaDebitoSalidaDTO actualizar(Long id, TarjetaDebitoEntradaDTO dto) {
+        TarjetaDebito tarjeta = repository.findById(id).orElseThrow();
         tarjeta.setMarca(dto.getMarca());
         tarjeta.setVencimiento(dto.getVencimiento());
-        return (TarjetaDebito) repository.save(tarjeta);
+        return mapToSalidaDTO(repository.save(tarjeta));
     }
 
     @Override
@@ -69,13 +80,8 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
 
     @Override
     public boolean retirarDinero(Long tarjetaId, double monto) {
-        TarjetaDebito tarjeta = (TarjetaDebito) repository.findById(tarjetaId)
-                .filter(t -> t instanceof TarjetaDebito)
-                .orElseThrow();
-        if (tarjeta.isBloqueada() || tarjeta.getVencimiento().isBefore(LocalDate.now())) {
-            return false;
-        }
-
+        TarjetaDebito tarjeta = repository.findById(tarjetaId).orElseThrow();
+        // lógica de retiro
         return true;
     }
 }
