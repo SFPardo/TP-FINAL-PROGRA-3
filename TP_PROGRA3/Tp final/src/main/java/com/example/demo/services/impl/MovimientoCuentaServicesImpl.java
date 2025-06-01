@@ -5,6 +5,8 @@ import com.example.demo.dto.MovimientoCuentaSalidaDTO;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.Movimiento;
 import com.example.demo.entities.MovimientoCuenta;
+import com.example.demo.entities.enums.TipoMovimiento;
+import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.MovimientoCuentaRepository;
 import com.example.demo.services.MovimientoCuentaService;
 import jakarta.transaction.Transactional;
@@ -20,13 +22,14 @@ public class MovimientoCuentaServicesImpl implements MovimientoCuentaService {
     @Autowired
     private MovimientoCuentaRepository movimientoCuentaRepository;
     @Autowired
-    private CuentaServiceImpl cuentaService;
+    private CuentaRepository cuentaRepository;
 
 
     @Override
     @Transactional
     public MovimientoCuenta crearMovimiento(MovimientoCuentaEntradaDTO dto){
-        Cuenta cuenta = cuentaService.buscarPorId(dto.getCuentaId());
+        Cuenta cuenta = cuentaRepository.findById(dto.getCuentaId())
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró una cuenta con el ID proporcionado"));
         if (cuenta == null) {
             throw new IllegalArgumentException("No se encontró una cuenta con el ID proporcionado");
         }
@@ -40,6 +43,7 @@ public class MovimientoCuentaServicesImpl implements MovimientoCuentaService {
                 .cuenta(cuenta)
                 .monto(dto.getMonto())
                 .descripcion(dto.getDescripcion())
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
                 .build();
         return movimientoCuentaRepository.save(movimiento);
     }
@@ -51,6 +55,7 @@ public class MovimientoCuentaServicesImpl implements MovimientoCuentaService {
                 .cuentaId(movimiento.getCuenta().getCuentaId())
                 .descripcion(movimiento.getDescripcion())
                 .monto(movimiento.getMonto())
+                .tipoMovimiento(movimiento.getTipoMovimiento())
                 .fecha(movimiento.getFecha())
                 .build();
     }
@@ -80,6 +85,7 @@ public class MovimientoCuentaServicesImpl implements MovimientoCuentaService {
                 .descripcion(movimiento.getDescripcion())
                 .monto(movimiento.getMonto())
                 .fecha(movimiento.getFecha())
+                .tipoMovimiento(movimiento.getTipoMovimiento())
                 .build()).toList();
     }
 
@@ -95,6 +101,7 @@ public class MovimientoCuentaServicesImpl implements MovimientoCuentaService {
                 .descripcion(movimiento.getDescripcion())
                 .monto(movimiento.getMonto())
                 .fecha(movimiento.getFecha())
+                .tipoMovimiento(movimiento.getTipoMovimiento())
                 .build()).toList();
     }
 }

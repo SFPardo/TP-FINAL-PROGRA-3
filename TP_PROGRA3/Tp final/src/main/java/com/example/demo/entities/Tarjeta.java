@@ -54,4 +54,9 @@ public abstract class Tarjeta {
     )
 
     private List<MovimientoTarjeta> movimientoList;
+
+    public void addMovimiento(MovimientoTarjeta movimiento){
+        movimientoList.add(movimiento);
+        movimiento.setTarjeta(this);
+    }
 }

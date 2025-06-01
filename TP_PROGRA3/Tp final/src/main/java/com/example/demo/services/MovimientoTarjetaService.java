@@ -13,5 +13,5 @@ public interface MovimientoTarjetaService {
     MovimientoTarjeta findById(Long id);
     void eliminarMovimientoPorId(Long id);
     List<MovimientoTarjetaSalidaDTO> listarMovimientos();
-    List<MovimientoTarjetaSalidaDTO> listarMovimientosPorTarjeta(String numero);
+    List<MovimientoTarjetaSalidaDTO> listarMovimientosPorTarjeta(Long tarjetaId);
 }

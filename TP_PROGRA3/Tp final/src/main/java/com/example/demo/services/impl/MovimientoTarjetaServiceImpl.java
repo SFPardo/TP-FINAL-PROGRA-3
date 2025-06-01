@@ -6,6 +6,8 @@ import com.example.demo.entities.MovimientoTarjeta;
 import com.example.demo.entities.TarjetaCredito;
 import com.example.demo.entities.TarjetaDebito;
 import com.example.demo.repositories.MovimientoTarjetaRepository;
+import com.example.demo.repositories.TarjetaCreditoRepository;
+import com.example.demo.repositories.TarjetaDebitoRepository;
 import com.example.demo.services.MovimientoTarjetaService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,14 +20,14 @@ public class MovimientoTarjetaServiceImpl implements MovimientoTarjetaService {
     @Autowired
     private MovimientoTarjetaRepository movimientoTarjetaRepository;
     @Autowired
-    private TarjetaDebitoServiceImpl tarjetaDebitoService;
+    private TarjetaDebitoRepository tarjetaDebitoRepository;
     @Autowired
-    private TarjetaCreditoServiceImpl tarjetaCreditoService;
+    private TarjetaCreditoRepository tarjetaCreditoRepository;
 
     @Override
     @Transactional
     public MovimientoTarjeta crearMovimientoDebito(MovimientoTarjetaEntradaDTO dto){
-        Optional<TarjetaDebito> debito = tarjetaDebitoService.findByNumero(dto.getNumeroTarjeta());
+        Optional<TarjetaDebito> debito = tarjetaDebitoRepository.findByNumero(dto.getNumeroTarjeta());
         if (debito.isEmpty()) {
             throw new IllegalArgumentException("No se encontró una tarjeta de débito con el número proporcionado");
         }
@@ -45,7 +47,7 @@ public class MovimientoTarjetaServiceImpl implements MovimientoTarjetaService {
     @Override
     @Transactional
     public MovimientoTarjeta crearMovimientoCredito(MovimientoTarjetaEntradaDTO dto){
-        Optional<TarjetaCredito> credito = tarjetaCreditoService.findByNumero(dto.getNumeroTarjeta());
+        Optional<TarjetaCredito> credito = tarjetaCreditoRepository.findByNumero(dto.getNumeroTarjeta());
         if (credito.isEmpty()) {
             throw new IllegalArgumentException("No se encontró una tarjeta de crédito con el número proporcionado");
         }
@@ -101,11 +103,11 @@ public class MovimientoTarjetaServiceImpl implements MovimientoTarjetaService {
     }
 
     @Override
-    public List<MovimientoTarjetaSalidaDTO> listarMovimientosPorTarjeta(String numero) {
-        if (numero == null || numero.isEmpty()) {
-            throw new IllegalArgumentException("El número de tarjeta no puede ser nulo o vacío");
+    public List<MovimientoTarjetaSalidaDTO> listarMovimientosPorTarjeta(Long tarjetaId) {
+        if (tarjetaId == null || tarjetaId <= 0) {
+            throw new IllegalArgumentException("El número de tarjeta no puede ser nulo o negativo");
         }
-        List<MovimientoTarjeta> movimientos = movimientoTarjetaRepository.findByNumeroOrderByFechaDesc(numero);
+        List<MovimientoTarjeta> movimientos = movimientoTarjetaRepository.findByTarjetaIdOrderByFechaDesc(tarjetaId);
         return movimientos.stream().map(movimiento -> MovimientoTarjetaSalidaDTO.builder()
                 .movimientoTarjetaId(movimiento.getMovimientoId())
                 .tarjetaId(movimiento.getTarjeta().getTarjetaId())

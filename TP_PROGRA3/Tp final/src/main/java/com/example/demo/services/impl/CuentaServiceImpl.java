@@ -6,12 +6,10 @@ import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.MovimientoCuenta;
 import com.example.demo.entities.Usuario;
 import com.example.demo.entities.enums.TipoCuenta;
+import com.example.demo.entities.enums.TipoMovimiento;
 import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.services.CuentaService;
-import com.example.demo.services.GeneradorAliasService;
-import com.example.demo.services.GeneradorCbuService;
-import com.example.demo.services.UsuarioService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,9 +25,9 @@ public class CuentaServiceImpl implements CuentaService {
     @Autowired
     private UsuarioRepository usuarioRepository;
     @Autowired
-    private GeneradorAliasService generadorAliasService;
+    private GeneradorAliasServiceImpl generadorAliasServiceImpl;
     @Autowired
-    private GeneradorCbuService generadorCbuService;
+    private GeneradorCbuServiceImpl generadorCbuServiceImpl;
 
     @Override
     @Transactional
@@ -40,10 +38,10 @@ public class CuentaServiceImpl implements CuentaService {
                 .usuario(usuario)
                 .build();
 
-        String cbu = generadorCbuService.generarCbu();
+        String cbu = generadorCbuServiceImpl.generarCbu();
         cuenta.setCbu(cbu);
 
-        String alias = generadorAliasService.generarAlias();
+        String alias = generadorAliasServiceImpl.generarAlias();
         cuenta.setAlias(alias);
 
         cuenta.setSaldo(BigDecimal.valueOf(0));
@@ -108,14 +106,6 @@ public class CuentaServiceImpl implements CuentaService {
                 .fechaCreacion(cuentaOptional.get().getFechaCreacion())
                 .usuarioId(cuentaOptional.get().getUsuario().getUsuarioId())
                 .build();
-    }
-    @Override
-    public Cuenta buscarPorId(Long cuentaId) {
-        if (cuentaId == null) {
-            throw new IllegalArgumentException("El ID de la cuenta no puede ser nulo.");
-        }
-        return cuentaRepository.findById(cuentaId)
-                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el ID proporcionado."));
     }
 
     @Override
@@ -186,11 +176,13 @@ public class CuentaServiceImpl implements CuentaService {
                 .monto(monto)
                 .descripcion("Transferencia a " + cuentaDestino.getAlias())
                 .cuenta(cuentaOrigen)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
                 .build();
         MovimientoCuenta entrada = MovimientoCuenta.builder()
                 .monto(monto)
                 .descripcion("Transferencia de " + cuentaOrigen.getAlias())
                 .cuenta(cuentaDestino)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
                 .build();
 
         cuentaOrigen.addMovimiento(salida);
@@ -222,6 +214,7 @@ public class CuentaServiceImpl implements CuentaService {
                 .monto(monto)
                 .descripcion("Extracción de dinero")
                 .cuenta(cuenta)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
                 .build();
 
         cuenta.addMovimiento(movimiento);
@@ -247,6 +240,7 @@ public class CuentaServiceImpl implements CuentaService {
                 .monto(monto)
                 .descripcion("Depósito de dinero")
                 .cuenta(cuenta)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
                 .build();
 
         cuenta.addMovimiento(movimiento);
@@ -274,10 +268,9 @@ public class CuentaServiceImpl implements CuentaService {
         if (usuarioId == null) {
             throw new IllegalArgumentException("El ID del usuario no puede ser nulo.");
         }
-        List<Cuenta> cuentas = cuentaRepository.findAll();
+        List<Cuenta> cuentas = cuentaRepository.findByUsuarioId(usuarioId);
 
         return cuentas.stream()
-                .filter(cuenta -> cuenta.getUsuario().getUsuarioId().equals(usuarioId))
                 .map(cuenta -> CuentaSalidaDTO.builder()
                         .cuentaId(cuenta.getCuentaId())
                         .cbu(cuenta.getCbu())
