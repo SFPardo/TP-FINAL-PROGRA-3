@@ -173,7 +173,7 @@ public class CuentaServiceImpl implements CuentaService {
         cuentaDestino.setSaldo(cuentaDestino.getSaldo().add(monto));
 
         MovimientoCuenta salida = MovimientoCuenta.builder()
-                .monto(monto)
+                .monto(monto.negate())
                 .descripcion("Transferencia a " + cuentaDestino.getAlias())
                 .cuenta(cuentaOrigen)
                 .tipoMovimiento(TipoMovimiento.EJECUTADO)
@@ -211,7 +211,7 @@ public class CuentaServiceImpl implements CuentaService {
         cuenta.setSaldo(cuenta.getSaldo().subtract(monto));
 
         MovimientoCuenta movimiento = MovimientoCuenta.builder()
-                .monto(monto)
+                .monto(monto.negate())
                 .descripcion("Extracción de dinero")
                 .cuenta(cuenta)
                 .tipoMovimiento(TipoMovimiento.EJECUTADO)
@@ -245,6 +245,89 @@ public class CuentaServiceImpl implements CuentaService {
 
         cuenta.addMovimiento(movimiento);
         cuentaRepository.save(cuenta);
+    }
+
+    @Override
+    @Transactional
+    public void comprarDolares(Long idCuentaOrigen, Long idCuentaDolares, BigDecimal montoPesos){
+        if (idCuentaOrigen == null || idCuentaDolares == null || montoPesos == null) {
+            throw new IllegalArgumentException("Los IDs de las cuentas y el monto no pueden ser nulos.");
+        }
+        if (montoPesos.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor que cero.");
+        }
+        Cuenta cuentaOrigen = cuentaRepository.findById(idCuentaOrigen)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el ID proporcionado."));
+        Cuenta cuentaDolares = cuentaRepository.findById(idCuentaDolares)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta de dólares con el ID proporcionado."));
+        if(cuentaDolares.getTipoCuenta() != TipoCuenta.AHORRO_DOLARES){
+            throw new IllegalArgumentException("Se requiere una cuenta de ahorro en dólares para realizar la compra.");
+        }
+        if (cuentaOrigen.getSaldo().compareTo(montoPesos) < 0) {
+            throw new IllegalArgumentException("Fondos insuficientes en la cuenta de origen.");
+        }
+        BigDecimal montoDolares = montoPesos.divide(new BigDecimal("1167"), 2, BigDecimal.ROUND_DOWN);
+        cuentaOrigen.setSaldo(cuentaOrigen.getSaldo().subtract(montoPesos));
+        cuentaDolares.setSaldo(cuentaDolares.getSaldo().add(montoDolares));
+        MovimientoCuenta movimientoOrigen = MovimientoCuenta.builder()
+                .monto(montoPesos.negate())
+                .descripcion("Compra de dólares")
+                .cuenta(cuentaOrigen)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
+                .build();
+        MovimientoCuenta movimientoDolares = MovimientoCuenta.builder()
+                .monto(montoDolares)
+                .descripcion("Venta de dólares")
+                .cuenta(cuentaDolares)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
+                .build();
+        cuentaOrigen.addMovimiento(movimientoOrigen);
+        cuentaDolares.addMovimiento(movimientoDolares);
+        cuentaRepository.save(cuentaOrigen);
+        cuentaRepository.save(cuentaDolares);
+    }
+
+    @Override
+    @Transactional
+    public void ventaDolares(Long idCuentaDolares, Long idCuentaDestino, BigDecimal montoDolares){
+        if (idCuentaDolares == null || idCuentaDestino == null || montoDolares == null) {
+            throw new IllegalArgumentException("Los IDs de las cuentas y el monto no pueden ser nulos.");
+        }
+        if (montoDolares.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor que cero.");
+        }
+        Cuenta cuentaDolares = cuentaRepository.findById(idCuentaDolares)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta de dólares con el ID proporcionado."));
+        Cuenta cuentaDestino = cuentaRepository.findById(idCuentaDestino)
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta destino con el ID proporcionado."));
+        if(cuentaDolares.getTipoCuenta() != TipoCuenta.AHORRO_DOLARES){
+            throw new IllegalArgumentException("Se requiere una cuenta de ahorro en dólares para realizar la venta.");
+        }
+        if(cuentaDestino.getTipoCuenta() != TipoCuenta.AHORRO_PESOS) {
+            throw new IllegalArgumentException("La cuenta destino debe ser una cuenta de ahorro en pesos.");
+        }
+        if (cuentaDolares.getSaldo().compareTo(montoDolares) < 0) {
+            throw new IllegalArgumentException("Fondos insuficientes en la cuenta de dólares.");
+        }
+        BigDecimal montoPesos = montoDolares.multiply(new BigDecimal("1167"));
+        cuentaDolares.setSaldo(cuentaDolares.getSaldo().subtract(montoDolares));
+        cuentaDestino.setSaldo(cuentaDestino.getSaldo().add(montoPesos));
+        MovimientoCuenta movimientoDolares = MovimientoCuenta.builder()
+                .monto(montoDolares.negate())
+                .descripcion("Venta de dólares")
+                .cuenta(cuentaDolares)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
+                .build();
+        MovimientoCuenta movimientoDestino = MovimientoCuenta.builder()
+                .monto(montoPesos)
+                .descripcion("Compra de dólares")
+                .cuenta(cuentaDestino)
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
+                .build();
+        cuentaDolares.addMovimiento(movimientoDolares);
+        cuentaDestino.addMovimiento(movimientoDestino);
+        cuentaRepository.save(cuentaDolares);
+        cuentaRepository.save(cuentaDestino);
     }
 
     @Override

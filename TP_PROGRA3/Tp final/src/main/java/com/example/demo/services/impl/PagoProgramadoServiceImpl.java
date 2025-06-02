@@ -5,7 +5,7 @@ import com.example.demo.entities.MovimientoCuenta;
 import com.example.demo.entities.enums.TipoMovimiento;
 import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.MovimientoCuentaRepository;
-import com.example.demo.services.DebitoAutomaticoService;
+import com.example.demo.services.PagoProgramadoService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class DebitoAutomaticoServiceImpl implements DebitoAutomaticoService {
+public class PagoProgramadoServiceImpl implements PagoProgramadoService {
     @Autowired
     private MovimientoCuentaRepository movimientoCuentaRepository;
     @Autowired
@@ -26,48 +26,50 @@ public class DebitoAutomaticoServiceImpl implements DebitoAutomaticoService {
 
     @Override
     @Transactional
-    public MovimientoCuenta programarDebitoAutomatico(Long cuentaId, BigDecimal monto, String descripcion){
+    public MovimientoCuenta programarPagoProgramado(Long cuentaId, BigDecimal monto, String descripcion){
         LocalDateTime retraso = LocalDateTime.now().plusSeconds(10);
         Cuenta cuenta = cuentaRepository.findById(cuentaId)
                 .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada"));
-        MovimientoCuenta debitoAutomatico = MovimientoCuenta.builder()
+        MovimientoCuenta pagoProgramado = MovimientoCuenta.builder()
                 .cuenta(cuenta)
                 .monto(monto)
                 .descripcion(descripcion)
                 .fecha(retraso)
                 .tipoMovimiento(TipoMovimiento.PENDIENTE)
                 .build();
-      cuenta.addMovimiento(debitoAutomatico);
+      cuenta.addMovimiento(pagoProgramado);
       cuentaRepository.save(cuenta);
-      return debitoAutomatico;
+      return pagoProgramado;
     }
 
     @Override
     @Scheduled(fixedRate = 5000)
     @Transactional
-    public void procesarDebitosAutomaticos(){
-        List<MovimientoCuenta> debitosPendientes = movimientoCuentaRepository.findPendientesParaEjecucion(TipoMovimiento.PENDIENTE, LocalDateTime.now());
-        for (MovimientoCuenta debito : debitosPendientes) {
-                ejecutarDebito(debito);
+    public void procesarPagosProgramados(){
+        List<MovimientoCuenta> pagosPendientes = movimientoCuentaRepository.findPendientesParaEjecucion(TipoMovimiento.PENDIENTE, LocalDateTime.now());
+        if(!pagosPendientes.isEmpty()) {
+            for (MovimientoCuenta debito : pagosPendientes) {
+                ejecutarPago(debito);
+            }
         }
     }
 
     @Override
     @org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void ejecutarDebito(MovimientoCuenta debito){
-        Optional<Cuenta> cuenta = cuentaRepository.findById(debito.getCuenta().getCuentaId());
+    public void ejecutarPago(MovimientoCuenta pago){
+        Optional<Cuenta> cuenta = cuentaRepository.findById(pago.getCuenta().getCuentaId());
         if(cuenta.isPresent()){
-            if(cuenta.get().getSaldo().compareTo(debito.getMonto()) >= 0) {
-                cuenta.get().setSaldo(cuenta.get().getSaldo().subtract(debito.getMonto()));
-                debito.setTipoMovimiento(TipoMovimiento.EJECUTADO);
+            if(cuenta.get().getSaldo().compareTo(pago.getMonto()) >= 0) {
+                cuenta.get().setSaldo(cuenta.get().getSaldo().subtract(pago.getMonto()));
+                pago.setTipoMovimiento(TipoMovimiento.EJECUTADO);
                 cuentaRepository.save(cuenta.get());
             } else {
-                debito.setTipoMovimiento(TipoMovimiento.FALLIDO);
-                movimientoCuentaRepository.save(debito);
+                pago.setTipoMovimiento(TipoMovimiento.FALLIDO);
+                movimientoCuentaRepository.save(pago);
             }
         }else {
-            debito.setTipoMovimiento(TipoMovimiento.FALLIDO);
-            movimientoCuentaRepository.save(debito);
+            pago.setTipoMovimiento(TipoMovimiento.FALLIDO);
+            movimientoCuentaRepository.save(pago);
         }
     }
 

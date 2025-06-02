@@ -20,4 +20,6 @@ public interface CuentaService {
     void depositarDinero(String alias, BigDecimal monto);
     List<CuentaSalidaDTO> listarCuentas();
     List<CuentaSalidaDTO> listarCuentasPorUsuario(Long usuarioId);
+    void comprarDolares(Long idCuentaOrigen, Long idCuentaDolares, BigDecimal montoPesos);
+    void ventaDolares(Long idCuentaDolares, Long idCuentaDestino, BigDecimal montoDolares);
 }
