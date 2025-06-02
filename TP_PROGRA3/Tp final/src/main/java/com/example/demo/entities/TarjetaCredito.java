@@ -18,4 +18,5 @@ import java.math.BigDecimal;
 )
 public class TarjetaCredito extends Tarjeta {
     private BigDecimal limite;
+    private BigDecimal saldo;
 }

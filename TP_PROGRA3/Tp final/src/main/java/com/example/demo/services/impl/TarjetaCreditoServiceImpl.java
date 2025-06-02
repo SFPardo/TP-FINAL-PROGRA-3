@@ -10,6 +10,8 @@
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.stereotype.Service;
 
+    import java.math.BigDecimal;
+    import java.time.LocalDate;
     import java.util.List;
     import java.util.Optional;
     import java.util.stream.Collectors;
@@ -45,6 +47,7 @@
                     .bloqueada(false)
                     .marca(dto.getMarca())
                     .limite(dto.getLimite())
+                    .saldo(BigDecimal.ZERO)
                     .cuenta(cuenta)
                     .build();
             return mapToSalidaDTO(repository.save(tarjeta));
@@ -73,6 +76,7 @@
             tarjeta.setMarca(dto.getMarca());
             tarjeta.setVencimiento(dto.getVencimiento());
             tarjeta.setLimite(dto.getLimite());
+            
             return mapToSalidaDTO(repository.save(tarjeta));
         }
 
@@ -83,12 +87,47 @@
 
         @Override
         public void pagarTarjeta(Long id, double monto) {
-            // lógica de pago de tarjeta
+            TarjetaCredito tarjeta = repository.findById(id)
+                    .filter(t -> t instanceof TarjetaCredito)
+                    .map(t -> (TarjetaCredito) t)
+                    .orElseThrow();
+
+            if (tarjeta.isBloqueada() || tarjeta.getVencimiento().isBefore(LocalDate.now())) {
+                throw new IllegalStateException("Tarjeta bloqueada o vencida");
+            }
+
+            BigDecimal montoPago = BigDecimal.valueOf(monto);
+            BigDecimal saldoActual = tarjeta.getSaldo();
+
+            // Si el pago es mayor al saldo, solo se paga lo que se debe
+            if (montoPago.compareTo(saldoActual) > 0) {
+                montoPago = saldoActual;
+            }
+
+            tarjeta.setSaldo(saldoActual.subtract(montoPago));
+            repository.save(tarjeta);
         }
 
         @Override
         public boolean pagarConTarjeta(Long id, double monto) {
-            // lógica de consumo con tarjeta
+            TarjetaCredito tarjeta = repository.findById(id)
+                    .filter(t -> t instanceof TarjetaCredito)
+                    .map(t -> (TarjetaCredito) t)
+                    .orElseThrow();
+
+            if (tarjeta.isBloqueada() || tarjeta.getVencimiento().isBefore(LocalDate.now())) {
+                return false;
+            }
+
+            BigDecimal montoCompra = BigDecimal.valueOf(monto);
+            BigDecimal disponible = tarjeta.getLimite().subtract(tarjeta.getSaldo());
+
+            if (disponible.compareTo(montoCompra) < 0) {
+                return false; // No hay suficiente crédito
+            }
+
+            tarjeta.setSaldo(tarjeta.getSaldo().add(montoCompra));
+            repository.save(tarjeta);
             return true;
         }
     }
