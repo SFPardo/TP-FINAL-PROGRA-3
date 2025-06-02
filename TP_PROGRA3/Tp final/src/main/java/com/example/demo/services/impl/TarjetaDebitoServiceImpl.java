@@ -10,6 +10,7 @@ import com.example.demo.services.TarjetaDebitoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -80,8 +81,24 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
 
     @Override
     public boolean retirarDinero(Long tarjetaId, double monto) {
-        TarjetaDebito tarjeta = repository.findById(tarjetaId).orElseThrow();
-        // lógica de retiro
+        TarjetaDebito tarjeta = repository.findById(tarjetaId)
+                .filter(t -> t instanceof TarjetaDebito)
+                .map(t -> (TarjetaDebito) t)
+                .orElseThrow(() -> new IllegalArgumentException("Tarjeta no encontrada"));
+
+        if (tarjeta.isBloqueada() || tarjeta.getVencimiento().isBefore(java.time.LocalDate.now())) {
+            return false;
+        }
+        Cuenta cuenta = tarjeta.getCuenta();
+        BigDecimal saldoActual = cuenta.getSaldo();
+        BigDecimal montoARetirar = BigDecimal.valueOf(monto);
+
+        if (saldoActual.compareTo(montoARetirar) < 0) {
+            return false;
+        }
+
+        cuenta.setSaldo(cuenta.getSaldo().subtract(java.math.BigDecimal.valueOf(monto)));
+        cuentaRepository.save(cuenta);
         return true;
     }
 }
