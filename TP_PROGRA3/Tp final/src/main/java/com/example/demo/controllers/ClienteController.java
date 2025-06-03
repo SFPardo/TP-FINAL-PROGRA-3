@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 import com.example.demo.dto.ClienteSalidaDTO;
 import com.example.demo.dto.DomicilioEntradaSalidaDTO;
+import com.example.demo.dto.UsuarioSalidaDTO;
 import com.example.demo.entities.Cliente;
 import com.example.demo.dto.ClienteEntradaDTO;
 import com.example.demo.entities.Cuenta;
@@ -33,7 +34,7 @@ public class ClienteController {
         return ResponseEntity.ok(clienteServiceImpl.obtenerTodosLosClientes());
     }
 
-    @GetMapping
+    @GetMapping("/dto")
     public ResponseEntity<List<ClienteSalidaDTO>> obtenerTodosDTO() {
         return ResponseEntity.ok(clienteServiceImpl.obtenerTodosLosClientesDTO());
     }
@@ -80,6 +81,20 @@ public class ClienteController {
             @RequestBody DomicilioEntradaSalidaDTO nuevoDomicilio) {
         return ResponseEntity.ok(clienteServiceImpl.actualizarDomicilio(id, nuevoDomicilio));
     }
+
+    @GetMapping("/mi-usuario")
+    public ResponseEntity<UsuarioSalidaDTO> obtenerUsuarioActual(Long id) {
+        UsuarioSalidaDTO usuario = clienteServiceImpl.obtenerUsuarioActual(id);
+        return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/mi-domicilio")
+    public ResponseEntity<DomicilioEntradaSalidaDTO> verMiDomicilio(Long id) {
+        DomicilioEntradaSalidaDTO domicilio = clienteServiceImpl.verMiDomicilio(id);
+        return domicilio != null ? ResponseEntity.ok(domicilio) : ResponseEntity.notFound().build();
+    }
+
+
 
 
 }

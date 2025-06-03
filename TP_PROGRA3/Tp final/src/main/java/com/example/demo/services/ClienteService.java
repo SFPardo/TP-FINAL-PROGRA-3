@@ -23,4 +23,5 @@ public interface ClienteService {
     List<ClienteSalidaDTO> obtenerTodosLosClientesDTO();
     ClienteSalidaDTO crearClienteConUsuarioYCuenta(ClienteEntradaDTO dto);
     ClienteSalidaDTO actualizarDomicilio(Long id, DomicilioEntradaSalidaDTO nuevoDomicilio);
+    boolean existeDni(String dni);
 }
