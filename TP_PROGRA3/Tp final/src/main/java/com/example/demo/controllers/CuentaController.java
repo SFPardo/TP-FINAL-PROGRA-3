@@ -29,7 +29,7 @@ public class CuentaController {
 
     @PostMapping("/{cuentaId}/debitoAutomatico")
     public ResponseEntity<String> programarDebitoAutomatico(@PathVariable Long cuentaId, @Valid @RequestBody BigDecimal monto, @Valid @RequestBody String descripcion) {
-        debitoAutomaticoServiceImpl.programarDebitoAutomatico(cuentaId, monto, descripcion);
+        debitoAutomaticoServiceImpl.programarPagoProgramado(cuentaId, monto, descripcion);
         return ResponseEntity.ok("Débito automático programado exitosamente");
     }
 
