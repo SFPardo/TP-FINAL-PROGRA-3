@@ -32,6 +32,12 @@ public class ClienteServiceImpl implements ClienteService {
     private final UsuarioRepository usuarioRepository;
     @Autowired
     private final CuentaRepository cuentaRepository;
+    @Autowired
+    private GeneradorAliasServiceImpl generadorAliasServiceImpl;
+    @Autowired
+    private GeneradorCbuServiceImpl generadorCbuServiceImpl;
+    @Autowired
+    private  UsuarioServiceImpl usuarioServiceImpl;
 
     @Override
     public Cliente crearCliente(Cliente cliente) {
@@ -136,9 +142,12 @@ public class ClienteServiceImpl implements ClienteService {
                 .pin(dto.getUsuario().getPin())
                 .build();
 
+        String alias = generadorAliasServiceImpl.generarAlias();
+        String cbu = generadorCbuServiceImpl.generarCbu();
+
         Cuenta cuenta = Cuenta.builder()
-                .alias(generarAliasUnico())
-                .cbu(generarCBUUnico())
+                .alias(alias)
+                .cbu(cbu)
                 .saldo(BigDecimal.ZERO)
                 .tipoCuenta(TipoCuenta.AHORRO_PESOS)
                 .limiteSobregiro(BigDecimal.ZERO)
@@ -211,5 +220,36 @@ public class ClienteServiceImpl implements ClienteService {
         return mapToSalidaDTO(clienteRepository.save(cliente));
     }
 
+    public boolean existeDni(String dni) {
+        return clienteRepository.findByDni(dni).isPresent();
+    }
 
+
+    public UsuarioSalidaDTO obtenerUsuarioActual(Long id) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        Usuario usuario = cliente.getUsuario();
+        if (usuario != null) {
+            UsuarioSalidaDTO usuarioDto = UsuarioServiceImpl.mapToDto(usuario);
+            return usuarioDto;
+        }
+        return null;
+
+    }
+
+    public DomicilioEntradaSalidaDTO verMiDomicilio(Long id) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        Domicilio domicilio = cliente.getDomicilio();
+        if (domicilio != null) {
+            DomicilioEntradaSalidaDTO domicilioDto = new DomicilioEntradaSalidaDTO();
+            domicilioDto.setProvincia(domicilio.getProvincia());
+            domicilioDto.setCiudad(domicilio.getCiudad());
+            domicilioDto.setCalle(domicilio.getCalle());
+            domicilioDto.setAltura(domicilio.getAltura());
+            return domicilioDto;
+        }
+        return null;
+
+    }
 }
