@@ -20,8 +20,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -177,15 +176,12 @@ public class ClienteServiceImpl implements ClienteService {
         Cliente clienteGuardado = clienteRepository.save(cliente);
         return mapToSalidaDTO(clienteGuardado);
     }
-    //ESTAS FUNCIONES SON PROVISIONALES PARA GENERAR CBU Y ALIAS ÚNICOS
-    //CAMBIAR CUANDO GENERADORALIASSERVICE Y GENERADORCBUSERVICE ESTÉN IMPLEMENTADOS
-    private String generarCBUUnico() {
-        return UUID.randomUUID().toString().substring(0, 22);
+    public ClienteSalidaDTO buscarClientePorIdConDTO(Long id) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        return mapToSalidaDTO(cliente);
     }
-    private String generarAliasUnico() {
-        return "alias" + new Random().nextInt(100000);
-    }
-
+    @Override
     public ClienteSalidaDTO actualizarClienteConDTO(Long id, ClienteEntradaDTO dto) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
@@ -204,8 +200,7 @@ public class ClienteServiceImpl implements ClienteService {
 
         return mapToSalidaDTO(clienteRepository.save(cliente));
     }
-
-
+    @Override
     public ClienteSalidaDTO actualizarDomicilio(Long id, DomicilioEntradaSalidaDTO nuevoDomicilio) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
@@ -219,12 +214,13 @@ public class ClienteServiceImpl implements ClienteService {
 
         return mapToSalidaDTO(clienteRepository.save(cliente));
     }
-
+    @Override
     public boolean existeDni(String dni) {
         return clienteRepository.findByDni(dni).isPresent();
     }
 
 
+    @Override
     public UsuarioSalidaDTO obtenerUsuarioActual(Long id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
@@ -236,7 +232,7 @@ public class ClienteServiceImpl implements ClienteService {
         return null;
 
     }
-
+    @Override
     public DomicilioEntradaSalidaDTO verMiDomicilio(Long id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
@@ -252,4 +248,66 @@ public class ClienteServiceImpl implements ClienteService {
         return null;
 
     }
+    @Override
+    public ClienteSalidaDTO cambiarNombre(Long id, String nuevoNombre) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+
+        cliente.setNombre(nuevoNombre);
+        Cliente clienteActualizado = clienteRepository.save(cliente);
+        return mapToSalidaDTO(clienteActualizado);
+    }
+    @Override
+    public ClienteSalidaDTO cambiarEmail(Long id, String nuevoEmail) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+
+        if (clienteRepository.findByEmail(nuevoEmail).isPresent()) {
+            throw new RuntimeException("Ya existe un cliente con ese email.");
+        }
+
+        cliente.setEmail(nuevoEmail);
+        Cliente clienteActualizado = clienteRepository.save(cliente);
+        return mapToSalidaDTO(clienteActualizado);
+    }
+    @Override
+    public ClienteSalidaDTO cambiarTelefono(Long id, String nuevoTelefono) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+
+        if (clienteRepository.findByTelefono(nuevoTelefono).isPresent()) {
+            throw new RuntimeException("Ya existe un cliente con ese teléfono.");
+        }
+
+        cliente.setTelefono(nuevoTelefono);
+        Cliente clienteActualizado = clienteRepository.save(cliente);
+        return mapToSalidaDTO(clienteActualizado);
+    }
+    @Override
+    public ClienteSalidaDTO buscarClientePorAlias(String alias) {
+        Cuenta cuenta = cuentaRepository.findByAlias(alias)
+                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada con el alias: " + alias));
+        Cliente cliente = cuenta.getUsuario().getCliente();
+        return mapToSalidaDTO(cliente);
+    }
+    @Override
+    public ClienteSalidaDTO buscarClientePorCbu(String cbu) {
+        Cuenta cuenta = cuentaRepository.findByCbu(cbu)
+                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada con el CBU: " + cbu));
+        Cliente cliente = cuenta.getUsuario().getCliente();
+        return mapToSalidaDTO(cliente);
+    }
+    @Override
+    public List<ClienteSalidaDTO> buscarClientesPorProvincia(String provincia) {
+        return clienteRepository.findByDomicilioProvincia(provincia).stream()
+                .map(this::mapToSalidaDTO)
+                .toList();
+    }
+    @Override
+    public List<ClienteSalidaDTO> buscarClientesPorCiudad(String ciudad) {
+        return clienteRepository.findByDomicilioCiudad(ciudad).stream()
+                .map(this::mapToSalidaDTO)
+                .toList();
+    }
+
 }

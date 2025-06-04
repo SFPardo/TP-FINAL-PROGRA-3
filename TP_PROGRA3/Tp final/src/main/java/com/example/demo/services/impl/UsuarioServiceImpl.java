@@ -1,5 +1,6 @@
 package com.example.demo.services.impl;
 
+import com.example.demo.dto.CuentaSalidaDTO;
 import com.example.demo.dto.UsuarioEntradaDTO;
 import com.example.demo.dto.UsuarioSalidaDTO;
 import com.example.demo.entities.Usuario;
@@ -26,9 +27,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Usuario buscarUsuarioPorUsername(String username) {
         return usuarioRepository.findByUsername(username).orElse(null);
     }
-    public Usuario buscarUsuarioPorEmail(String email) {
-        return usuarioRepository.findByEmail(email).orElse(null);
-    }
     public void actualizarUsuario(Usuario usuario) {
         usuarioRepository.save(usuario);
     }
@@ -48,16 +46,9 @@ public class UsuarioServiceImpl implements UsuarioService {
             usuarioRepository.delete(usuario);
         }
     }
-    public void eliminarUsuarioPorEmail(String email) {
-        Usuario usuario = buscarUsuarioPorEmail(email);
-        if (usuario != null) {
-            usuarioRepository.delete(usuario);
-        }
-    }
     public void eliminarUsuarioPorId(Long id) {
         usuarioRepository.deleteById(id);
     }
-
     public Usuario login(String nombreUsuario, int pin) {
         return usuarioRepository
                 .findNombreUsuarioAndPin(nombreUsuario, pin)
@@ -71,18 +62,15 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setPin(nuevoPin);
         return usuarioRepository.save(usuario);
     }
-
     public List<Usuario> obtenerTodosLosUsuarios() {
         return usuarioRepository.findAll();
     }
-
     public static UsuarioSalidaDTO mapToDto(Usuario usuario) {
         if (usuario == null) {
             return null;
         }
         return new UsuarioSalidaDTO(usuario.getUsuarioId(), usuario.getNombreUsuario());
     }
-
     public List<UsuarioSalidaDTO> mapToDtoList(List<Usuario> usuarios) {
         return usuarios.stream()
                 .map(UsuarioServiceImpl::mapToDto)
@@ -91,4 +79,27 @@ public class UsuarioServiceImpl implements UsuarioService {
     public List<UsuarioSalidaDTO> obtenerTodosLosUsuariosDTO() {
         return mapToDtoList(usuarioRepository.findAll());
     }
+    public Usuario mapFromDto(UsuarioEntradaDTO usuarioEntradaDTO) {
+        if (usuarioEntradaDTO == null) {
+            return null;
+        }
+        return Usuario.builder()
+                .nombreUsuario(usuarioEntradaDTO.getNombreUsuario())
+                .pin(usuarioEntradaDTO.getPin())
+                .build();
+    }
+    public Usuario crearUsuarioDto(UsuarioEntradaDTO usuarioEntradaDTO) {
+        Usuario usuario = mapFromDto(usuarioEntradaDTO);
+        return usuarioRepository.save(usuario);
+    }
+//    public List<CuentaSalidaDTO> obtenerCuentasPorUsuarioId(Long usuarioId) {
+//        Usuario usuario = buscarUsuarioPorId(usuarioId);
+//        if (usuario != null) {
+//            return usuario.getCuentaList().stream()
+//                    .map(cuenta -> new CuentaSalidaDTO(cuenta.getCuentaId(), cuenta.getCbu(), cuenta.getSaldo()))
+//                    .toList();
+//        }
+//        return List.of();
+//    }
+
 }
