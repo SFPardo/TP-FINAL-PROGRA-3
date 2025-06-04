@@ -19,10 +19,6 @@ public class UsuarioController {
     private final UsuarioServiceImpl usuarioServiceImpl;
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> obtenerTodos() {
-        return ResponseEntity.ok(usuarioServiceImpl.obtenerTodosLosUsuarios());
-    }
-    @GetMapping
     public ResponseEntity<List<UsuarioSalidaDTO>> obtenerTodosLosUsuariosSalida() {
         List<UsuarioSalidaDTO> usuarios = usuarioServiceImpl.obtenerTodosLosUsuariosDTO();
         return ResponseEntity.ok(usuarios);
@@ -40,7 +36,7 @@ public class UsuarioController {
         Usuario usuario = usuarioServiceImpl.cambiarPin(nombreUsuario, nuevoPin);
         return ResponseEntity.ok(usuario);
     }
-    @PostMapping("/crear/usuario")
+    @PostMapping("/crear")
     public ResponseEntity<Usuario> crearUsuarioDto(@RequestBody UsuarioEntradaDTO usuarioEntradaDTO) {
         Usuario usuario = new Usuario();
         usuario.setNombreUsuario(usuarioEntradaDTO.getNombreUsuario());

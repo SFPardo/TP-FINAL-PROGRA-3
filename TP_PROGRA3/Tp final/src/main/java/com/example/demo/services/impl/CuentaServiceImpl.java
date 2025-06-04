@@ -48,19 +48,13 @@ public class CuentaServiceImpl implements CuentaService {
 
         cuenta.setTipoCuenta(dto.getTipoCuenta());
 
-        if(noEsCuentaCorriente(cuenta.getUsuario().getUsuarioId())){
+        if(!cuenta.getTipoCuenta().equals(TipoCuenta.CORRIENTE)){
             cuenta.setLimiteSobregiro(BigDecimal.valueOf(0));
         }else{
             cuenta.setLimiteSobregiro(BigDecimal.valueOf(50000));
         }
 
         return cuentaRepository.save(cuenta);
-    }
-
-    public boolean noEsCuentaCorriente(Long usuarioId) {
-        return cuentaRepository.findById(usuarioId)
-                .map(cuenta -> !cuenta.getTipoCuenta().equals(TipoCuenta.CORRIENTE))
-                .orElse(true);
     }
 
     @Override
@@ -351,7 +345,7 @@ public class CuentaServiceImpl implements CuentaService {
         if (usuarioId == null) {
             throw new IllegalArgumentException("El ID del usuario no puede ser nulo.");
         }
-        List<Cuenta> cuentas = cuentaRepository.findByUsuarioId(usuarioId);
+        List<Cuenta> cuentas = cuentaRepository.findByUsuario_UsuarioId(usuarioId);
 
         return cuentas.stream()
                 .map(cuenta -> CuentaSalidaDTO.builder()

@@ -1,6 +1,7 @@
 package com.example.demo.entities;
 
 import com.example.demo.entities.enums.TipoCuenta;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +13,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@ToString(exclude = {"usuario", "movimientoList", "tarjetaList"})
+//@ToString(exclude = {"usuario", "movimientoList", "tarjetaList"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -45,12 +46,13 @@ public class Cuenta {
         fechaCreacion = LocalDate.now();
     }
     @ManyToOne(
-            fetch = FetchType.EAGER
+            fetch = FetchType.LAZY
     )
     @JoinColumn(
             name = "usuario_id",
             referencedColumnName = "usuarioId"
     )
+    @JsonIgnoreProperties("cuentaList")
     private Usuario usuario;
     @OneToMany(
             mappedBy = "cuenta",
@@ -58,6 +60,7 @@ public class Cuenta {
             fetch = FetchType.LAZY,
             orphanRemoval = true
     )
+    @JsonIgnoreProperties("cuenta")
     private List<MovimientoCuenta> movimientoList = new ArrayList<>();
     @OneToMany(
             mappedBy = "cuenta",
@@ -65,6 +68,7 @@ public class Cuenta {
             fetch = FetchType.LAZY,
             orphanRemoval = true
     )
+    @JsonIgnoreProperties("cuenta")
     private List<Tarjeta> tarjetaList = new ArrayList<>();
 
     public void addMovimiento(MovimientoCuenta movimiento) {

@@ -1,11 +1,12 @@
 package com.example.demo.entities;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
 @Setter
-@ToString
+//@ToString(exclude = {"usuario"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -41,10 +42,11 @@ public class Cliente {
 
     @OneToOne(
             cascade = CascadeType.ALL,
-            fetch = FetchType.EAGER
+            fetch = FetchType.LAZY
     )
     @JoinColumn(
             name = "usuario_id", unique = true, nullable = false
     )
+    @JsonIgnoreProperties({"cliente"})
     private Usuario usuario;
 }

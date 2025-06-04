@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 @DiscriminatorValue("CREDITO")
 @Getter
 @Setter
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder

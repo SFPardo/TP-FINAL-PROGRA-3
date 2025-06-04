@@ -1,5 +1,6 @@
 package com.example.demo.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -11,7 +12,7 @@ import java.time.LocalDate;
 @DiscriminatorValue("TARJETA")
 @Getter
 @Setter
-@ToString
+//@ToString(exclude = {"tarjeta"})
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
@@ -25,6 +26,7 @@ public class MovimientoTarjeta extends Movimiento{
             referencedColumnName = "tarjetaId",
             nullable = false
     )
+    @JsonIgnoreProperties({"movimientoList", "cuenta"})
     private Tarjeta tarjeta;
 }
 

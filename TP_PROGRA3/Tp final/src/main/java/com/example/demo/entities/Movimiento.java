@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @DiscriminatorColumn(name = "tipo_tarjeta", discriminatorType = DiscriminatorType.STRING)
 @Getter
 @Setter
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
@@ -26,6 +25,7 @@ public abstract class Movimiento {
     private BigDecimal monto;
     private LocalDateTime fecha;
     private String descripcion;
+    @Enumerated(EnumType.STRING)
     private TipoMovimiento tipoMovimiento;
     @PrePersist
     protected void alCrear(){

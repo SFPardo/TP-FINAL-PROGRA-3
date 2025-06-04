@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface TarjetaCreditoRepository extends JpaRepository<TarjetaCredito, Long> {
     Optional<TarjetaCredito> findByNumero(String numero);
-    List<TarjetaCredito> findByCuentaId(Long cuentaId);
+    List<TarjetaCredito> findByCuenta_CuentaId(Long cuentaId);
 }

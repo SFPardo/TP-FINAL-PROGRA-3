@@ -21,11 +21,11 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
     Optional<Cuenta> findByAlias(String alias);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Cuenta> findById(Long id);
-    List<Cuenta> findByUsuarioId(Long usuarioId);
+    List<Cuenta> findByUsuario_UsuarioId(Long usuarioId);
 
     @Modifying
     @Transactional
-    @Query("UPDATE Cuenta c SET c.alias = :nuevoAlias WHERE c.cuentaID = :id")
+    @Query("UPDATE Cuenta c SET c.alias = :nuevoAlias WHERE c.cuentaId = :id")
     int actualizarAliasPorId(@Param("id") Long id,@Param("nuevoAlias") String nuevoAlias);
     
 }

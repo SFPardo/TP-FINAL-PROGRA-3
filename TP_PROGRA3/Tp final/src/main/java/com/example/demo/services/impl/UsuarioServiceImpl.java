@@ -15,6 +15,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UsuarioServiceImpl implements UsuarioService {
+
     @Autowired
     private final UsuarioRepository usuarioRepository;
 
@@ -25,7 +26,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarioRepository.findById(id).orElse(null);
     }
     public Usuario buscarUsuarioPorUsername(String username) {
-        return usuarioRepository.findByUsername(username).orElse(null);
+        return usuarioRepository.findByNombreUsuario(username).orElse(null);
     }
     public void actualizarUsuario(Usuario usuario) {
         usuarioRepository.save(usuario);
@@ -51,12 +52,12 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
     public Usuario login(String nombreUsuario, int pin) {
         return usuarioRepository
-                .findNombreUsuarioAndPin(nombreUsuario, pin)
+                .findByNombreUsuarioAndPin(nombreUsuario, pin)
                 .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
     }
     public Usuario cambiarPin(String nombreUsuario, int nuevoPin) {
         Usuario usuario = usuarioRepository
-                .findByUsername(nombreUsuario)
+                .findByNombreUsuario(nombreUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         usuario.setPin(nuevoPin);
@@ -92,14 +93,5 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = mapFromDto(usuarioEntradaDTO);
         return usuarioRepository.save(usuario);
     }
-//    public List<CuentaSalidaDTO> obtenerCuentasPorUsuarioId(Long usuarioId) {
-//        Usuario usuario = buscarUsuarioPorId(usuarioId);
-//        if (usuario != null) {
-//            return usuario.getCuentaList().stream()
-//                    .map(cuenta -> new CuentaSalidaDTO(cuenta.getCuentaId(), cuenta.getCbu(), cuenta.getSaldo()))
-//                    .toList();
-//        }
-//        return List.of();
-//    }
 
 }
