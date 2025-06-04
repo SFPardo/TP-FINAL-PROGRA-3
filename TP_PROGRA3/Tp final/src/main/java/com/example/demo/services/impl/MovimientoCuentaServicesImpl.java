@@ -94,7 +94,7 @@ public class MovimientoCuentaServicesImpl implements MovimientoCuentaService {
         if(cuentaId == null) {
             throw new IllegalArgumentException("El ID de la cuenta no puede ser nulo");
         }
-        List<MovimientoCuenta> movimientos = movimientoCuentaRepository.findByCuentaIdOrderByFechaDesc(cuentaId);
+        List<MovimientoCuenta> movimientos = movimientoCuentaRepository.findByCuenta_CuentaIdOrderByFechaDesc(cuentaId);
         return movimientos.stream().map(movimiento -> MovimientoCuentaSalidaDTO.builder()
                 .movimientoId(movimiento.getMovimientoId())
                 .cuentaId(movimiento.getCuenta().getCuentaId())

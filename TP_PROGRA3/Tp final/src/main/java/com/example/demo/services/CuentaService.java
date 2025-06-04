@@ -9,7 +9,6 @@ import java.util.List;
 
 public interface CuentaService {
     Cuenta crearCuenta(CuentaEntradaDTO dto);
-    boolean noEsCuentaCorriente(Long usuarioId);
     boolean actualizarAliasPorId(Long cuentaId, String nuevoAlias);
     void borrarCuenta(Long cuentaId);
     CuentaSalidaDTO buscarPorCbu(String cbu);

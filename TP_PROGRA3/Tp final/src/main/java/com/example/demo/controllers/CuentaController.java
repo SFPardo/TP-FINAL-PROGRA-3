@@ -27,24 +27,6 @@ public class CuentaController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    @PostMapping("/{cuentaId}/debitoAutomatico")
-    public ResponseEntity<String> programarDebitoAutomatico(@PathVariable Long cuentaId, @Valid @RequestBody BigDecimal monto, @Valid @RequestBody String descripcion) {
-        debitoAutomaticoServiceImpl.programarPagoProgramado(cuentaId, monto, descripcion);
-        return ResponseEntity.ok("Débito automático programado exitosamente");
-    }
-
-    @PostMapping("/comprarDolares")
-    public ResponseEntity<String> comprarDolares(@RequestBody Long idCuentaOrigen, @RequestBody Long idCuentaDolares, @RequestBody BigDecimal montoPesos) {
-        cuentaServiceImpl.comprarDolares(idCuentaOrigen, idCuentaDolares, montoPesos);
-        return ResponseEntity.ok("Compra de dólares realizada exitosamente");
-    }
-
-    @PostMapping("/ventaDolares")
-    public ResponseEntity<String> ventaDolares(@RequestBody Long idCuentaDolares, @RequestBody Long idCuentaDestino, @RequestBody BigDecimal montoDolares) {
-        cuentaServiceImpl.ventaDolares(idCuentaDolares, idCuentaDestino, montoDolares);
-        return ResponseEntity.ok("Venta de dólares realizada exitosamente");
-    }
-
     @PatchMapping("/{cuentaId}/alias")
     public ResponseEntity<String> actualizarAliasCuenta(@PathVariable Long cuentaId, @Valid @RequestBody String nuevoAlias) {
         if(cuentaServiceImpl.actualizarAliasPorId(cuentaId, nuevoAlias)){
@@ -65,6 +47,26 @@ public class CuentaController {
         cuentaServiceImpl.cambiarLimiteSobregiro(cuentaId, nuevoLimite);
         return ResponseEntity.ok("Límite de sobregiro cambiado exitosamente");
     }
+
+    @PostMapping("/{cuentaId}/debitoAutomatico")
+    public ResponseEntity<String> programarDebitoAutomatico(@PathVariable Long cuentaId, @Valid @RequestBody BigDecimal monto, @Valid @RequestBody String descripcion) {
+        debitoAutomaticoServiceImpl.programarPagoProgramado(cuentaId, monto, descripcion);
+        return ResponseEntity.ok("Débito automático programado exitosamente");
+    }
+
+    @PostMapping("/comprarDolares")
+    public ResponseEntity<String> comprarDolares(@RequestBody Long idCuentaOrigen, @RequestBody Long idCuentaDolares, @RequestBody BigDecimal montoPesos) {
+        cuentaServiceImpl.comprarDolares(idCuentaOrigen, idCuentaDolares, montoPesos);
+        return ResponseEntity.ok("Compra de dólares realizada exitosamente");
+    }
+
+    @PostMapping("/ventaDolares")
+    public ResponseEntity<String> ventaDolares(@RequestBody Long idCuentaDolares, @RequestBody Long idCuentaDestino, @RequestBody BigDecimal montoDolares) {
+        cuentaServiceImpl.ventaDolares(idCuentaDolares, idCuentaDestino, montoDolares);
+        return ResponseEntity.ok("Venta de dólares realizada exitosamente");
+    }
+
+
 
     @PostMapping("/transferir")
     public ResponseEntity<String> transferir(@RequestBody String cbuOrigen, @RequestBody String cbuDestino, @RequestParam BigDecimal monto) {

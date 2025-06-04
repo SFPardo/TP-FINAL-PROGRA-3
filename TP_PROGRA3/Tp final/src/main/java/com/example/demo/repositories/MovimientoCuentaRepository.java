@@ -15,11 +15,11 @@ import java.util.List;
 
 @Repository
 public interface MovimientoCuentaRepository extends JpaRepository<MovimientoCuenta, Long> {
-    List<MovimientoCuenta> findByCuentaIdOrderByFechaDesc(Long cuentaId);
+    List<MovimientoCuenta> findByCuenta_CuentaIdOrderByFechaDesc(Long cuentaId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT mc FROM MovimientoCuenta mc WHERE mc.tipoMovimiento = :tipo " +
-            "AND mc.fechaProgramadaEjecucion <= :fechaLimite")
+            "AND mc.fecha <= :fechaLimite")
     List<MovimientoCuenta> findPendientesParaEjecucion(
             @Param("tipo") TipoMovimiento tipo,
             @Param("fechaLimite") LocalDateTime fechaLimite);

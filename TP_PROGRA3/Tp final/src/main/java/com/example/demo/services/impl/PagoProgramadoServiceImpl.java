@@ -62,6 +62,7 @@ public class PagoProgramadoServiceImpl implements PagoProgramadoService {
             if(cuenta.get().getSaldo().compareTo(pago.getMonto()) >= 0) {
                 cuenta.get().setSaldo(cuenta.get().getSaldo().subtract(pago.getMonto()));
                 pago.setTipoMovimiento(TipoMovimiento.EJECUTADO);
+                movimientoCuentaRepository.save(pago);
                 cuentaRepository.save(cuenta.get());
             } else {
                 pago.setTipoMovimiento(TipoMovimiento.FALLIDO);

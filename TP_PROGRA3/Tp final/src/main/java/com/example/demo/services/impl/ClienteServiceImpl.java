@@ -35,8 +35,6 @@ public class ClienteServiceImpl implements ClienteService {
     private GeneradorAliasServiceImpl generadorAliasServiceImpl;
     @Autowired
     private GeneradorCbuServiceImpl generadorCbuServiceImpl;
-    @Autowired
-    private  UsuarioServiceImpl usuarioServiceImpl;
 
     @Override
     public Cliente crearCliente(Cliente cliente) {
@@ -125,7 +123,7 @@ public class ClienteServiceImpl implements ClienteService {
         if (clienteRepository.findByTelefono(dto.getTelefono()).isPresent()) {
             throw new RuntimeException("Ya existe un cliente con ese teléfono.");
         }
-        if (usuarioRepository.findByUsername(dto.getUsuario().getNombreUsuario()).isPresent()) {
+        if (usuarioRepository.findByNombreUsuario(dto.getUsuario().getNombreUsuario()).isPresent()) {
             throw new RuntimeException("Ya existe un usuario con ese nombre de usuario.");
         }
         if (dto.getDomicilio() == null ||

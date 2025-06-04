@@ -1,5 +1,6 @@
 package com.example.demo.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,7 +9,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@ToString
+//@ToString(exclude = {"cliente", "cuentaList"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -28,16 +29,15 @@ public class Usuario {
     private int pin;
     @OneToOne(
             mappedBy = "usuario",
-            fetch = FetchType.EAGER
+            fetch = FetchType.LAZY
     )
+    @JsonIgnoreProperties({"usuario"})
     private Cliente cliente;
     @OneToMany(
+            mappedBy = "usuario",
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY
     )
-    @JoinColumn(
-            name = "usuario_id",
-            referencedColumnName = "usuarioId"
-    )
+    @JsonIgnoreProperties({"movimientoList", "tarjetaList"})
     private List<Cuenta> cuentaList;
 }

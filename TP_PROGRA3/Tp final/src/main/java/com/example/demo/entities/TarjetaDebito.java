@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 @DiscriminatorValue("DEBITO")
 @Getter
 @Setter
-@ToString
 @SuperBuilder
 @NoArgsConstructor
 @Table(

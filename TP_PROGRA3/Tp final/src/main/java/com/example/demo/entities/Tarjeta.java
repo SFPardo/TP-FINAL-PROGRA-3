@@ -1,5 +1,6 @@
 package com.example.demo.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Future;
@@ -15,7 +16,7 @@ import java.util.List;
 @DiscriminatorColumn(name = "tipo_tarjeta", discriminatorType = DiscriminatorType.STRING)
 @Getter
 @Setter
-@ToString
+//@ToString(exclude = {"cuenta", "movimientoList"})
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
@@ -35,7 +36,7 @@ public abstract class Tarjeta {
     @NotNull
     private String marca;
     @ManyToOne(
-            fetch = FetchType.EAGER
+            fetch = FetchType.LAZY
     )
     @JoinColumn(
             name = "cuenta_id",
@@ -43,16 +44,15 @@ public abstract class Tarjeta {
             nullable = false
     )
     @NotNull
+    @JsonIgnoreProperties({"movimientoList", "tarjetaList"})
     private Cuenta cuenta;
     @OneToMany(
+            mappedBy = "tarjeta",
             cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY
+            fetch = FetchType.LAZY,
+            orphanRemoval = true
     )
-    @JoinColumn(
-            name = "tarjeta_id",
-            referencedColumnName = "tarjetaId"
-    )
-
+    @JsonIgnoreProperties({"tarjeta"})
     private List<MovimientoTarjeta> movimientoList;
 
     public void addMovimiento(MovimientoTarjeta movimiento){

@@ -107,7 +107,7 @@ public class MovimientoTarjetaServiceImpl implements MovimientoTarjetaService {
         if (tarjetaId == null || tarjetaId <= 0) {
             throw new IllegalArgumentException("El número de tarjeta no puede ser nulo o negativo");
         }
-        List<MovimientoTarjeta> movimientos = movimientoTarjetaRepository.findByTarjetaIdOrderByFechaDesc(tarjetaId);
+        List<MovimientoTarjeta> movimientos = movimientoTarjetaRepository.findByTarjeta_TarjetaIdOrderByFechaDesc(tarjetaId);
         return movimientos.stream().map(movimiento -> MovimientoTarjetaSalidaDTO.builder()
                 .movimientoTarjetaId(movimiento.getMovimientoId())
                 .tarjetaId(movimiento.getTarjeta().getTarjetaId())
