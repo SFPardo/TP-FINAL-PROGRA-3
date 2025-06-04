@@ -40,11 +40,6 @@ public class UsuarioController {
         Usuario usuario = usuarioServiceImpl.cambiarPin(nombreUsuario, nuevoPin);
         return ResponseEntity.ok(usuario);
     }
-    @PostMapping("/crear")
-    public ResponseEntity<Usuario> crearUsuario(@RequestBody Usuario usuario) {
-        usuarioServiceImpl.crearUsuario(usuario);
-        return ResponseEntity.ok(usuario);
-    }
     @PostMapping("/crear/usuario")
     public ResponseEntity<Usuario> crearUsuarioDto(@RequestBody UsuarioEntradaDTO usuarioEntradaDTO) {
         Usuario usuario = new Usuario();
@@ -53,12 +48,7 @@ public class UsuarioController {
         usuarioServiceImpl.crearUsuario(usuario);
         return ResponseEntity.ok(usuario);
     }
-    @GetMapping("/{id1}")
-    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable Long id) {
-        Usuario usuario = usuarioServiceImpl.buscarUsuarioPorId(id);
-        return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-    }
-    @GetMapping("/{id2}")
+    @GetMapping("/{id}")
     public ResponseEntity<UsuarioSalidaDTO> obtenerUsuarioPorIdSalida(@PathVariable Long id) {
         Usuario usuario = usuarioServiceImpl.buscarUsuarioPorId(id);
         if (usuario != null) {
@@ -68,27 +58,8 @@ public class UsuarioController {
         return ResponseEntity.notFound().build();
     }
     @GetMapping("/username/{username}")
-    public ResponseEntity<Usuario> obtenerUsuarioPorUsername(@PathVariable String username) {
-        Usuario usuario = usuarioServiceImpl.buscarUsuarioPorUsername(username);
-        return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-    }
-    @GetMapping("/username/{usernameDto}")
     public ResponseEntity<UsuarioSalidaDTO> obtenerUsuarioPorUsernameSalida(@PathVariable String username) {
         Usuario usuario = usuarioServiceImpl.buscarUsuarioPorUsername(username);
-        if (usuario != null) {
-            UsuarioSalidaDTO usuarioSalidaDTO = new UsuarioSalidaDTO(usuario.getUsuarioId(), usuario.getNombreUsuario());
-            return ResponseEntity.ok(usuarioSalidaDTO);
-        }
-        return ResponseEntity.notFound().build();
-    }
-    @GetMapping("/email/{email}")
-    public ResponseEntity<Usuario> obtenerUsuarioPorEmail(@PathVariable String email) {
-        Usuario usuario = usuarioServiceImpl.buscarUsuarioPorEmail(email);
-        return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-    }
-    @GetMapping("/email/{emailDto}")
-    public ResponseEntity<UsuarioSalidaDTO> obtenerUsuarioPorEmailSalida(@PathVariable String email) {
-        Usuario usuario = usuarioServiceImpl.buscarUsuarioPorEmail(email);
         if (usuario != null) {
             UsuarioSalidaDTO usuarioSalidaDTO = new UsuarioSalidaDTO(usuario.getUsuarioId(), usuario.getNombreUsuario());
             return ResponseEntity.ok(usuarioSalidaDTO);
@@ -111,47 +82,6 @@ public class UsuarioController {
         usuarioServiceImpl.eliminarUsuarioPorUsername(username);
         return ResponseEntity.noContent().build();
     }
-    @DeleteMapping("/email/{email}")
-    public ResponseEntity<Void> eliminarUsuarioPorEmail(@PathVariable String email) {
-        usuarioServiceImpl.eliminarUsuarioPorEmail(email);
-        return ResponseEntity.noContent().build();
-    }
-    @DeleteMapping("/id/{id}")
-    public ResponseEntity<Void> eliminarUsuarioPorId(@PathVariable Long id) {
-        usuarioServiceImpl.eliminarUsuarioPorId(id);
-        return ResponseEntity.noContent().build();
-    }
-    @GetMapping("/buscar")
-    public ResponseEntity<Usuario> buscarUsuario(
-            @RequestParam(required = false) String username,
-            @RequestParam(required = false) String email) {
-        if (username != null) {
-            Usuario usuario = usuarioServiceImpl.buscarUsuarioPorUsername(username);
-            return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-        } else if (email != null) {
-            Usuario usuario = usuarioServiceImpl.buscarUsuarioPorEmail(email);
-            return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.badRequest().build();
-    }
-    @GetMapping("/buscar/{id}")
-    public ResponseEntity<Usuario> buscarUsuarioPorId(@PathVariable Long id) {
-        Usuario usuario = usuarioServiceImpl.buscarUsuarioPorId(id);
-        return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-    }
-    @GetMapping("/buscar/nombre-usuario/{nombreUsuario}")
-    public ResponseEntity<Usuario> buscarUsuarioPorNombreUsuario(@PathVariable String nombreUsuario) {
-        Usuario usuario = usuarioServiceImpl.buscarUsuarioPorUsername(nombreUsuario);
-        return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-    }
-    @GetMapping("/buscar/email/{email}")
-    public ResponseEntity<Usuario> buscarUsuarioPorEmail(@PathVariable String email) {
-        Usuario usuario = usuarioServiceImpl.buscarUsuarioPorEmail(email);
-        return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-    }
-
-
-
 
 
 
