@@ -2,6 +2,8 @@ package com.example.demo.repositories;
 
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.Movimiento;
+import com.example.demo.entities.Usuario;
+import com.example.demo.entities.enums.TipoCuenta;
 import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -22,6 +24,7 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Cuenta> findById(Long id);
     List<Cuenta> findByUsuario_UsuarioId(Long usuarioId);
+    boolean existsByUsuarioAndTipoCuenta(Usuario usuario, TipoCuenta tipoCuenta);
 
     @Modifying
     @Transactional

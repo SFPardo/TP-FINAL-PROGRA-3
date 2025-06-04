@@ -16,7 +16,7 @@ import java.util.List;
 @DiscriminatorColumn(name = "tipo_tarjeta", discriminatorType = DiscriminatorType.STRING)
 @Getter
 @Setter
-//@ToString(exclude = {"cuenta", "movimientoList"})
+@ToString(exclude = {"cuenta", "movimientoList"})
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder

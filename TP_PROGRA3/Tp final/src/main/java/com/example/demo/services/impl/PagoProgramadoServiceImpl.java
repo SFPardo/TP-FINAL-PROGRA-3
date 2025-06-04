@@ -43,7 +43,7 @@ public class PagoProgramadoServiceImpl implements PagoProgramadoService {
     }
 
     @Override
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 30000)
     @Transactional
     public void procesarPagosProgramados(){
         List<MovimientoCuenta> pagosPendientes = movimientoCuentaRepository.findPendientesParaEjecucion(TipoMovimiento.PENDIENTE, LocalDateTime.now());

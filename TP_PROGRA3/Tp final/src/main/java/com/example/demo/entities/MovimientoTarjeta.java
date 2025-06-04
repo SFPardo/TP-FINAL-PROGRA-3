@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @DiscriminatorValue("TARJETA")
 @Getter
 @Setter
-//@ToString(exclude = {"tarjeta"})
+@ToString(exclude = {"tarjeta"})
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
@@ -24,7 +24,7 @@ public class MovimientoTarjeta extends Movimiento{
     @JoinColumn(
             name = "tarjeta_id",
             referencedColumnName = "tarjetaId",
-            nullable = false
+            nullable = true
     )
     @JsonIgnoreProperties({"movimientoList", "cuenta"})
     private Tarjeta tarjeta;

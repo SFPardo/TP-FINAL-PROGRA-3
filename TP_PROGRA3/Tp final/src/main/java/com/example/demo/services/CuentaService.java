@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface CuentaService {
-    Cuenta crearCuenta(CuentaEntradaDTO dto);
+    CuentaSalidaDTO crearCuenta(CuentaEntradaDTO dto);
     boolean actualizarAliasPorId(Long cuentaId, String nuevoAlias);
     void borrarCuenta(Long cuentaId);
     CuentaSalidaDTO buscarPorCbu(String cbu);

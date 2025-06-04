@@ -1,4 +1,5 @@
 package com.example.demo.validation.validator;
+
 import com.example.demo.validation.annotation.EnumValue;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -6,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class EnumValueValidator implements ConstraintValidator<EnumValue, String> {
+public class EnumValueValidator implements ConstraintValidator<EnumValue, Enum<?>> {
 
     private List<String> acceptedValues;
 
@@ -18,11 +19,10 @@ public class EnumValueValidator implements ConstraintValidator<EnumValue, String
     }
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext context) {
+    public boolean isValid(Enum<?> value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;
         }
-
-        return acceptedValues.contains(value.toUpperCase());
+        return acceptedValues.contains(value.name());
     }
 }

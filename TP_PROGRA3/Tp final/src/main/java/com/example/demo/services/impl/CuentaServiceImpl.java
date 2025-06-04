@@ -10,6 +10,8 @@ import com.example.demo.entities.enums.TipoMovimiento;
 import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.services.CuentaService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,9 +33,15 @@ public class CuentaServiceImpl implements CuentaService {
 
     @Override
     @Transactional
-    public Cuenta crearCuenta(CuentaEntradaDTO dto){
+    public CuentaSalidaDTO crearCuenta(CuentaEntradaDTO dto){
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
                 .orElseThrow(() -> new IllegalArgumentException("El usuario con el Id proporcionado no existe"));
+        if (dto.getTipoCuenta().equals(TipoCuenta.CORRIENTE)) {
+            boolean hasCorrienteAccount = cuentaRepository.existsByUsuarioAndTipoCuenta(usuario, TipoCuenta.CORRIENTE);
+            if (hasCorrienteAccount) {
+                throw new IllegalStateException("El usuario ya tiene una cuenta corriente. Cada usuario puede tener solo una cuenta corriente.");
+            }
+        }
         Cuenta cuenta = Cuenta.builder()
                 .usuario(usuario)
                 .build();
@@ -54,16 +62,34 @@ public class CuentaServiceImpl implements CuentaService {
             cuenta.setLimiteSobregiro(BigDecimal.valueOf(50000));
         }
 
-        return cuentaRepository.save(cuenta);
+        cuentaRepository.save(cuenta);
+
+
+        return CuentaSalidaDTO.builder()
+                .cuentaId(cuenta.getCuentaId())
+                .cbu(cuenta.getCbu())
+                .alias(cuenta.getAlias())
+                .saldo(cuenta.getSaldo())
+                .tipoCuenta(cuenta.getTipoCuenta())
+                .fechaCreacion(cuenta.getFechaCreacion())
+                .limiteSobregiro(cuenta.getLimiteSobregiro())
+                .usuarioId(usuario.getUsuarioId())
+                .build();
     }
 
     @Override
     @Transactional
     public boolean actualizarAliasPorId(Long cuentaId, String nuevoAlias){
-        if(cuentaRepository.findByAlias(nuevoAlias).isPresent()){
+        String aliasLimpio = nuevoAlias.trim();
+        if (aliasLimpio.startsWith("\"") && aliasLimpio.endsWith("\"")) {
+            aliasLimpio = aliasLimpio.substring(1, aliasLimpio.length() - 1);
+        }
+        aliasLimpio = aliasLimpio.replace("\r", "").replace("\n", "");
+
+        if(cuentaRepository.findByAlias(aliasLimpio).isPresent()){
             throw new IllegalArgumentException("El alias ingresado ya se encuentra en uso");
         }
-        int filasAfectadas = cuentaRepository.actualizarAliasPorId(cuentaId, nuevoAlias);
+        int filasAfectadas = cuentaRepository.actualizarAliasPorId(cuentaId, aliasLimpio);
         return filasAfectadas > 0;
     }
 
@@ -159,11 +185,26 @@ public class CuentaServiceImpl implements CuentaService {
         Cuenta cuentaDestino = cuentaRepository.findByCbu(cbuDestino)
                 .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el CBU proporcionado."));
 
-        if (cuentaOrigen.getSaldo().compareTo(monto) < 0) {
-            throw new IllegalArgumentException("Fondos insuficientes en la cuenta de origen.");
+        BigDecimal saldoActualOrigen = cuentaOrigen.getSaldo();
+        BigDecimal saldoDespuesDeTransferenciaOrigen = saldoActualOrigen.subtract(monto);
+
+        if (cuentaOrigen.getTipoCuenta() == TipoCuenta.CORRIENTE) {
+            BigDecimal limiteSobregiro = cuentaOrigen.getLimiteSobregiro();
+
+            BigDecimal maximoPermitidoTransferir = saldoActualOrigen.add(limiteSobregiro);
+
+            if (monto.compareTo(maximoPermitidoTransferir) > 0) {
+                throw new IllegalArgumentException("Monto excede el saldo disponible y el límite de sobregiro en la cuenta de origen. Máximo permitido transferir: " + maximoPermitidoTransferir);
+            }
+            cuentaOrigen.setSaldo(saldoDespuesDeTransferenciaOrigen);
+
+        } else {
+            if (saldoDespuesDeTransferenciaOrigen.compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Fondos insuficientes en la cuenta de origen para la transferencia. Saldo actual: " + saldoActualOrigen + ", Monto a transferir: " + monto);
+            }
+            cuentaOrigen.setSaldo(saldoDespuesDeTransferenciaOrigen);
         }
 
-        cuentaOrigen.setSaldo(cuentaOrigen.getSaldo().subtract(monto));
         cuentaDestino.setSaldo(cuentaDestino.getSaldo().add(monto));
 
         MovimientoCuenta salida = MovimientoCuenta.builder()
@@ -191,18 +232,31 @@ public class CuentaServiceImpl implements CuentaService {
         if (alias == null || monto == null) {
             throw new IllegalArgumentException("El alias y el monto no pueden ser nulos.");
         }
-        Cuenta cuenta = cuentaRepository.findByAlias(alias)
-                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el id proporcionado."));
-
         if (monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor que cero.");
         }
+        Cuenta cuenta = cuentaRepository.findByAlias(alias)
+                .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada con Alias: " + alias));
 
-        if (cuenta.getSaldo().compareTo(monto) < 0) {
-            throw new IllegalArgumentException("Fondos insuficientes en la cuenta.");
+        BigDecimal saldoActual = cuenta.getSaldo();
+        BigDecimal saldoDespuesDeRetiro = saldoActual.subtract(monto);
+
+        if (cuenta.getTipoCuenta() == TipoCuenta.CORRIENTE) {
+            BigDecimal limiteSobregiro = cuenta.getLimiteSobregiro();
+
+            BigDecimal maximoPermitidoRetirar = saldoActual.add(limiteSobregiro);
+
+            if (monto.compareTo(maximoPermitidoRetirar) > 0) {
+                throw new IllegalArgumentException("Monto excede el saldo disponible y el límite de sobregiro. Máximo permitido retirar: " + maximoPermitidoRetirar);
+            }
+            cuenta.setSaldo(saldoDespuesDeRetiro);
+
+        } else {
+            if (saldoDespuesDeRetiro.compareTo(BigDecimal.ZERO) < 0) {
+                throw new IllegalArgumentException("Saldo insuficiente en la cuenta. Intento de retiro: " + monto + ", Saldo actual: " + saldoActual);
+            }
+            cuenta.setSaldo(saldoDespuesDeRetiro);
         }
-
-        cuenta.setSaldo(cuenta.getSaldo().subtract(monto));
 
         MovimientoCuenta movimiento = MovimientoCuenta.builder()
                 .monto(monto.negate())
@@ -222,7 +276,7 @@ public class CuentaServiceImpl implements CuentaService {
             throw new IllegalArgumentException("El alias y el monto no pueden ser nulos.");
         }
         Cuenta cuenta = cuentaRepository.findByAlias(alias)
-                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el id proporcionado."));
+                .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el alias proporcionado."));
 
         if (monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El monto debe ser mayor que cero.");
@@ -335,6 +389,7 @@ public class CuentaServiceImpl implements CuentaService {
                         .saldo(cuenta.getSaldo())
                         .tipoCuenta(cuenta.getTipoCuenta())
                         .fechaCreacion(cuenta.getFechaCreacion())
+                        .limiteSobregiro(cuenta.getLimiteSobregiro())
                         .usuarioId(cuenta.getUsuario().getUsuarioId())
                         .build())
                 .toList();
