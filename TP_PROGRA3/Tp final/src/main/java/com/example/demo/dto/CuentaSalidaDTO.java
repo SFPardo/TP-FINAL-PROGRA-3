@@ -18,6 +18,7 @@ public class CuentaSalidaDTO {
     private String cbu;
     private String alias;
     private BigDecimal saldo;
+    private BigDecimal limiteSobregiro;
     private TipoCuenta tipoCuenta;
     private LocalDate fechaCreacion;
     private Long usuarioId;

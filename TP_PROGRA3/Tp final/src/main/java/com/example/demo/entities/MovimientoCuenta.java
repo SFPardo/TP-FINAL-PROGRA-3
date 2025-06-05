@@ -9,7 +9,7 @@ import lombok.experimental.SuperBuilder;
 @DiscriminatorValue("CUENTA")
 @Getter
 @Setter
-//@ToString(exclude = {"cuenta"})
+@ToString(exclude = {"cuenta"})
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
@@ -20,7 +20,7 @@ public class MovimientoCuenta extends Movimiento {
     @JoinColumn(
             name = "cuenta_id",
             referencedColumnName = "cuentaId",
-            nullable = false
+            nullable = true
     )
     @JsonIgnoreProperties({"movimientoList", "tarjetaList"})
     private Cuenta cuenta;

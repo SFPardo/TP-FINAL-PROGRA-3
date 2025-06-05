@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "tipo_tarjeta", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "tipo_movimiento", discriminatorType = DiscriminatorType.STRING)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -26,6 +26,7 @@ public abstract class Movimiento {
     private LocalDateTime fecha;
     private String descripcion;
     @Enumerated(EnumType.STRING)
+    @Column(name = "estado_movimiento")
     private TipoMovimiento tipoMovimiento;
     @PrePersist
     protected void alCrear(){
