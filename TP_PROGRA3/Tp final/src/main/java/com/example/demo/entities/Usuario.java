@@ -3,7 +3,9 @@ package com.example.demo.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -40,4 +42,6 @@ public class Usuario {
     )
     @JsonIgnoreProperties({"movimientoList", "tarjetaList"})
     private List<Cuenta> cuentaList;
+    @UpdateTimestamp
+    private LocalDateTime fechaActualizacion;
 }

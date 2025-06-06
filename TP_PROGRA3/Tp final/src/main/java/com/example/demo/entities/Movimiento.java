@@ -3,6 +3,7 @@ import com.example.demo.entities.enums.TipoMovimiento;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
@@ -32,5 +33,7 @@ public abstract class Movimiento {
     protected void alCrear(){
         fecha = LocalDateTime.now();
     }
+    @UpdateTimestamp
+    private LocalDateTime fechaActualizacion;
 
 }

@@ -27,7 +27,7 @@ public class PagoProgramadoServiceImpl implements PagoProgramadoService {
     @Override
     @Transactional
     public MovimientoCuenta programarPagoProgramado(Long cuentaId, BigDecimal monto, String descripcion){
-        LocalDateTime retraso = LocalDateTime.now().plusSeconds(10);
+        LocalDateTime retraso = LocalDateTime.now().plusSeconds(60);
         Cuenta cuenta = cuentaRepository.findById(cuentaId)
                 .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada"));
         MovimientoCuenta pagoProgramado = MovimientoCuenta.builder()
