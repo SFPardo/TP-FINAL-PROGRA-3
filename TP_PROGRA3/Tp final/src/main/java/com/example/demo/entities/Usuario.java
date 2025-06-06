@@ -1,9 +1,14 @@
 package com.example.demo.entities;
 
+import com.example.demo.type.Role;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
 import java.util.List;
 
 @Entity
@@ -16,7 +21,7 @@ import java.util.List;
 @Table(
         name = "tbl_usuario"
 )
-public class Usuario {
+public class Usuario implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long usuarioId;
@@ -40,4 +45,38 @@ public class Usuario {
     )
     @JsonIgnoreProperties({"movimientoList", "tarjetaList"})
     private List<Cuenta> cuentaList;
+
+    @Enumerated(EnumType.STRING)
+    private Role rol;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(rol.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return String.valueOf(pin); // Convertimos el PIN a String para Spring Security
+    }
+    @Override
+    public String getUsername() {
+        return nombreUsuario;
+    }
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
 }

@@ -37,7 +37,7 @@ public class ClienteController {
         return ResponseEntity.ok(clienteServiceImpl.obtenerTodosLosClientesDTO());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/buscaPorId/{id}")
     public ResponseEntity<ClienteSalidaDTO> buscarPorId(@PathVariable Long id) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.buscarClientePorIdConDTO(id);
@@ -46,7 +46,7 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/{dni}")
+    @GetMapping("/buscaPorDni/{dni}")
     public ResponseEntity<ClienteSalidaDTO> buscarPorDni(@PathVariable String dni) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.mapToSalidaDTO(clienteServiceImpl.buscarClientePorDni(dni));
@@ -55,7 +55,7 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/{email}")
+    @GetMapping("/buscaPorEmail/{email}")
     public ResponseEntity<ClienteSalidaDTO> buscarPorEmail(@PathVariable String email) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.mapToSalidaDTO(clienteServiceImpl.buscarClientePorEmail(email));
@@ -64,7 +64,7 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/{telefono}")
+    @GetMapping("/buscaPorTelefono/{telefono}")
     public ResponseEntity<ClienteSalidaDTO> buscarPorTelefono(@PathVariable String telefono) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.mapToSalidaDTO(clienteServiceImpl.buscarClientePorTelefono(telefono));
@@ -74,17 +74,17 @@ public class ClienteController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/eliminarPorId/{id}")
     public ResponseEntity<Void> eliminarClientePorId(@PathVariable Long id) {
         clienteServiceImpl.eliminarCliente(id);
         return ResponseEntity.noContent().build();
     }
-    @DeleteMapping("/{dni}")
+    @DeleteMapping("/eliminarPorDni/{dni}")
     public ResponseEntity<Void> eliminarClientePorDni(@PathVariable String dni) {
         clienteServiceImpl.eliminarClientePorDni(dni);
         return ResponseEntity.noContent().build();
     }
-    @DeleteMapping("/{email}")
+    @DeleteMapping("/eliminarPorEmail/{email}")
     public ResponseEntity<Void> eliminarClientePorEmail(@PathVariable String email) {
         clienteServiceImpl.eliminarClientePorEmail(email);
         return ResponseEntity.noContent().build();
@@ -98,13 +98,13 @@ public class ClienteController {
     }
 
     @GetMapping("/mi-usuario")
-    public ResponseEntity<UsuarioSalidaDTO> obtenerUsuarioActual(Long id) {
+    public ResponseEntity<UsuarioSalidaDTO> obtenerUsuarioActual(@RequestParam Long id) {
         UsuarioSalidaDTO usuario = clienteServiceImpl.obtenerUsuarioActual(id);
         return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/mi-domicilio")
-    public ResponseEntity<DomicilioEntradaSalidaDTO> verMiDomicilio(Long id) {
+    public ResponseEntity<DomicilioEntradaSalidaDTO> verMiDomicilio(@RequestParam Long id) {
         DomicilioEntradaSalidaDTO domicilio = clienteServiceImpl.verMiDomicilio(id);
         return domicilio != null ? ResponseEntity.ok(domicilio) : ResponseEntity.notFound().build();
     }
