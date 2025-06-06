@@ -4,9 +4,11 @@ import com.example.demo.entities.enums.TipoCuenta;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,6 +72,8 @@ public class Cuenta {
     )
     @JsonIgnoreProperties("cuenta")
     private List<Tarjeta> tarjetaList = new ArrayList<>();
+    @UpdateTimestamp
+    private LocalDateTime fechaActualizacion;
 
     public void addMovimiento(MovimientoCuenta movimiento) {
         movimientoList.add(movimiento);
@@ -80,4 +84,5 @@ public class Cuenta {
         tarjetaList.add(tarjeta);
         tarjeta.setCuenta(this);
     }
+
 }

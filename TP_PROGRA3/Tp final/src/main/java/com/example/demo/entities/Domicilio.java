@@ -3,6 +3,9 @@ import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -20,4 +23,6 @@ public class Domicilio {
     private String calle;
     @Min(value = 1, message = "El número debe ser mayor o igual a 1")
     private int altura;
+    @UpdateTimestamp
+    private LocalDateTime fechaActualizacion;
 }

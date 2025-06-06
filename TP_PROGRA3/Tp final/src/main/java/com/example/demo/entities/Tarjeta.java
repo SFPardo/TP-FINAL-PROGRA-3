@@ -7,8 +7,10 @@ import jakarta.validation.constraints.Future;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -54,6 +56,8 @@ public abstract class Tarjeta {
     )
     @JsonIgnoreProperties({"tarjeta"})
     private List<MovimientoTarjeta> movimientoList;
+    @UpdateTimestamp
+    private LocalDateTime fechaActualizacion;
 
     public void addMovimiento(MovimientoTarjeta movimiento){
         movimientoList.add(movimiento);

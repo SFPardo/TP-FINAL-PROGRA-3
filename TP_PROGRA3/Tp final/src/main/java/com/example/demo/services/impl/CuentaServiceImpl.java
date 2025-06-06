@@ -7,6 +7,7 @@ import com.example.demo.entities.MovimientoCuenta;
 import com.example.demo.entities.Usuario;
 import com.example.demo.entities.enums.TipoCuenta;
 import com.example.demo.entities.enums.TipoMovimiento;
+import com.example.demo.exceptions.SaldoInsuficienteException;
 import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.services.CuentaService;
@@ -194,13 +195,13 @@ public class CuentaServiceImpl implements CuentaService {
             BigDecimal maximoPermitidoTransferir = saldoActualOrigen.add(limiteSobregiro);
 
             if (monto.compareTo(maximoPermitidoTransferir) > 0) {
-                throw new IllegalArgumentException("Monto excede el saldo disponible y el límite de sobregiro en la cuenta de origen. Máximo permitido transferir: " + maximoPermitidoTransferir);
+                throw new SaldoInsuficienteException("Monto excede el saldo disponible y el límite de sobregiro en la cuenta de origen. Máximo permitido transferir: " + maximoPermitidoTransferir);
             }
             cuentaOrigen.setSaldo(saldoDespuesDeTransferenciaOrigen);
 
         } else {
             if (saldoDespuesDeTransferenciaOrigen.compareTo(BigDecimal.ZERO) < 0) {
-                throw new IllegalArgumentException("Fondos insuficientes en la cuenta de origen para la transferencia. Saldo actual: " + saldoActualOrigen + ", Monto a transferir: " + monto);
+                throw new SaldoInsuficienteException("Fondos insuficientes en la cuenta de origen para la transferencia. Saldo actual: " + saldoActualOrigen + ", Monto a transferir: " + monto);
             }
             cuentaOrigen.setSaldo(saldoDespuesDeTransferenciaOrigen);
         }
@@ -247,13 +248,13 @@ public class CuentaServiceImpl implements CuentaService {
             BigDecimal maximoPermitidoRetirar = saldoActual.add(limiteSobregiro);
 
             if (monto.compareTo(maximoPermitidoRetirar) > 0) {
-                throw new IllegalArgumentException("Monto excede el saldo disponible y el límite de sobregiro. Máximo permitido retirar: " + maximoPermitidoRetirar);
+                throw new SaldoInsuficienteException("Monto excede el saldo disponible y el límite de sobregiro. Máximo permitido retirar: " + maximoPermitidoRetirar);
             }
             cuenta.setSaldo(saldoDespuesDeRetiro);
 
         } else {
             if (saldoDespuesDeRetiro.compareTo(BigDecimal.ZERO) < 0) {
-                throw new IllegalArgumentException("Saldo insuficiente en la cuenta. Intento de retiro: " + monto + ", Saldo actual: " + saldoActual);
+                throw new SaldoInsuficienteException("Saldo insuficiente en la cuenta. Intento de retiro: " + monto + ", Saldo actual: " + saldoActual);
             }
             cuenta.setSaldo(saldoDespuesDeRetiro);
         }

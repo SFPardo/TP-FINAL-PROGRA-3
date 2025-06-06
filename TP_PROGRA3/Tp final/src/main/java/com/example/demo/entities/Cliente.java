@@ -2,6 +2,9 @@ package com.example.demo.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -49,4 +52,7 @@ public class Cliente {
     )
     @JsonIgnoreProperties({"cliente"})
     private Usuario usuario;
+    @UpdateTimestamp
+    private LocalDateTime fechaActualizacion;
+
 }
