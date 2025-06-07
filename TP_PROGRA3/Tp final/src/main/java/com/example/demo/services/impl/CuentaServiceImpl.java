@@ -415,4 +415,41 @@ public class CuentaServiceImpl implements CuentaService {
                         .build())
                 .toList();
     }
+
+    public boolean esDueño(Long cuentaId, String nombreUsuario) {
+        Optional<Cuenta> cuentaOptional = cuentaRepository.findById(cuentaId);
+        if (cuentaOptional.isEmpty()) {
+            return false;
+        }
+        Cuenta cuenta = cuentaOptional.get();
+        return cuenta.getUsuario().getNombreUsuario().equals(nombreUsuario);
+    }
+
+    public boolean esDueñoPorAlias(String alias, String nombreUsuario) {
+        Optional<Cuenta> cuentaOptional = cuentaRepository.findByAlias(alias);
+        if (cuentaOptional.isEmpty()) {
+            return false;
+        }
+        Cuenta cuenta = cuentaOptional.get();
+        return cuenta.getUsuario().getNombreUsuario().equals(nombreUsuario);
+    }
+
+    public boolean esDueñoPorCbu(String cbu, String nombreUsuario) {
+        Optional<Cuenta> cuentaOptional = cuentaRepository.findByCbu(cbu);
+        if (cuentaOptional.isEmpty()) {
+            return false;
+        }
+        Cuenta cuenta = cuentaOptional.get();
+        return cuenta.getUsuario().getNombreUsuario().equals(nombreUsuario);
+    }
+
+    public boolean esDueñoPorUsuarioId(Long usuarioId, String nombreUsuario) {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findById(usuarioId);
+        if (usuarioOptional.isEmpty()) {
+            return false;
+        }
+        Usuario usuario = usuarioOptional.get();
+        return usuario.getNombreUsuario().equals(nombreUsuario);
+    }
 }
+

@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -29,6 +30,7 @@ public class CuentaController {
         this.pagoProgramadoServiceImpl = pagoProgramadoServiceImpl;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<CuentaSalidaDTO> crearCuenta(@Valid @RequestBody CuentaEntradaDTO dto) {
         CuentaSalidaDTO cuentaCreada = cuentaServiceImpl.crearCuenta(dto);
@@ -39,6 +41,7 @@ public class CuentaController {
         return ResponseEntity.created(location).body(cuentaCreada);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @CuentaServiceImpl.esDueño(#cuentaId, principal.username))")
     @PatchMapping("/{cuentaId}/alias")
     public ResponseEntity<String> actualizarAliasCuenta(@PathVariable Long cuentaId, @Valid @RequestBody String nuevoAlias) {
         if(cuentaServiceImpl.actualizarAliasPorId(cuentaId, nuevoAlias)){
@@ -48,74 +51,84 @@ public class CuentaController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{cuentaId}")
     public ResponseEntity<String> borrarCuenta(@PathVariable Long cuentaId) {
         cuentaServiceImpl.borrarCuenta(cuentaId);
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{cuentaId}/limiteSobregiro")
     public ResponseEntity<String> actualizarLimiteSobregiro(@PathVariable Long cuentaId, @Valid @RequestBody BigDecimal nuevoLimite) {
         cuentaServiceImpl.cambiarLimiteSobregiro(cuentaId, nuevoLimite);
         return ResponseEntity.ok("Límite de sobregiro cambiado exitosamente");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{cuentaId}/debitoAutomatico")
     public ResponseEntity<String> programarDebitoAutomatico(@PathVariable Long cuentaId, @Valid @RequestParam BigDecimal monto, @Valid @RequestParam String descripcion) {
         pagoProgramadoServiceImpl.programarPagoProgramado(cuentaId, monto, descripcion);
         return ResponseEntity.ok("Débito automático programado exitosamente");
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @CuentaServiceImpl.esDueño(#idCuentaOrigen, principal.username))")
     @PostMapping("/comprarDolares")
     public ResponseEntity<String> comprarDolares(@RequestParam Long idCuentaOrigen, @RequestParam Long idCuentaDolares, @RequestParam BigDecimal montoPesos) {
         cuentaServiceImpl.comprarDolares(idCuentaOrigen, idCuentaDolares, montoPesos);
         return ResponseEntity.ok("Compra de dólares realizada exitosamente");
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @CuentaServiceImpl.esDueño(#idCuentaDolares, principal.username))")
     @PostMapping("/ventaDolares")
     public ResponseEntity<String> ventaDolares(@RequestParam Long idCuentaDolares, @RequestParam Long idCuentaDestino, @RequestParam BigDecimal montoDolares) {
         cuentaServiceImpl.ventaDolares(idCuentaDolares, idCuentaDestino, montoDolares);
         return ResponseEntity.ok("Venta de dólares realizada exitosamente");
     }
 
-
-
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @CuentaServiceImpl.esDueñoPorCbu(#cbuDestino, principal.username))")
     @PostMapping("/transferir")
     public ResponseEntity<String> transferir(@RequestParam String cbuOrigen, @RequestParam String cbuDestino, @RequestParam BigDecimal monto) {
         cuentaServiceImpl.transferenciaEntreCuentas(cbuOrigen, cbuDestino, monto);
         return ResponseEntity.ok("Transferencia realizada exitosamente");
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @CuentaServiceImpl.esDueñoPorAlias(#alias, principal.username))")
     @PostMapping("/depositar")
     public ResponseEntity<String> depositar(@RequestParam String alias, @RequestParam BigDecimal monto) {
         cuentaServiceImpl.depositarDinero(alias, monto);
         return ResponseEntity.ok("Depósito realizado exitosamente");
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @CuentaServiceImpl.esDueñoPorAlias(#alias, principal.username))")
     @PostMapping("/retirar")
     public ResponseEntity<String> retirar(@RequestParam String alias, @RequestParam BigDecimal monto) {
         cuentaServiceImpl.retirarDinero(alias, monto);
         return ResponseEntity.ok("Retiro realizado exitosamente");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/porCbu/{cbu}")
     public ResponseEntity<CuentaSalidaDTO> buscarPorCbu(@PathVariable String cbu) {
         CuentaSalidaDTO cuenta = cuentaServiceImpl.buscarPorCbu(cbu);
         return ResponseEntity.ok(cuenta);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/porAlias/{alias}")
     public ResponseEntity<CuentaSalidaDTO> buscarPorAlias(@PathVariable String alias) {
         CuentaSalidaDTO cuenta = cuentaServiceImpl.buscarPorAlias(alias);
         return ResponseEntity.ok(cuenta);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<CuentaSalidaDTO>> listarCuentas(){
         List<CuentaSalidaDTO> salida = cuentaServiceImpl.listarCuentas();
         return ResponseEntity.ok(salida);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @CuentaServiceImpl.esDueñoPorUsuarioId(#usuarioId, principal.username))")
     @GetMapping("/porUsuario/{usuarioId}")
     public ResponseEntity<List<CuentaSalidaDTO>> listarCuentasUsuario(@PathVariable Long usuarioId){
         List <CuentaSalidaDTO> salida = cuentaServiceImpl.listarCuentasPorUsuario(usuarioId);
