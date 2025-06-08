@@ -24,5 +24,5 @@ public class Domicilio {
     @Min(value = 1, message = "El número debe ser mayor o igual a 1")
     private int altura;
     @UpdateTimestamp
-    private LocalDateTime fechaActualizacion;
+    private LocalDateTime fechaActualizacionDomicilio;
 }

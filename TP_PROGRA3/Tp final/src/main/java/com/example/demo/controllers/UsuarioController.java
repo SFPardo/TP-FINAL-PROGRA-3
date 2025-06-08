@@ -23,27 +23,7 @@ public class UsuarioController {
         List<UsuarioSalidaDTO> usuarios = usuarioServiceImpl.obtenerTodosLosUsuariosDTO();
         return ResponseEntity.ok(usuarios);
     }
-    @PostMapping("/login")
-    public ResponseEntity<Usuario> login(@RequestBody LogInDTO dto) {
-        Usuario usuario = usuarioServiceImpl.login(dto.getNombreUsuario(), dto.getPin());
-        return ResponseEntity.ok(usuario);
-    }
 
-    @PutMapping("/cambiar-pin")
-    public ResponseEntity<Usuario> cambiarPin(
-            @RequestParam String nombreUsuario,
-            @RequestParam int nuevoPin) {
-        Usuario usuario = usuarioServiceImpl.cambiarPin(nombreUsuario, nuevoPin);
-        return ResponseEntity.ok(usuario);
-    }
-    @PostMapping("/crear")
-    public ResponseEntity<Usuario> crearUsuarioDto(@RequestBody UsuarioEntradaDTO usuarioEntradaDTO) {
-        Usuario usuario = new Usuario();
-        usuario.setNombreUsuario(usuarioEntradaDTO.getNombreUsuario());
-        usuario.setPin(usuarioEntradaDTO.getPin());
-        usuarioServiceImpl.crearUsuario(usuario);
-        return ResponseEntity.ok(usuario);
-    }
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioSalidaDTO> obtenerUsuarioPorIdSalida(@PathVariable Long id) {
         Usuario usuario = usuarioServiceImpl.buscarUsuarioPorId(id);

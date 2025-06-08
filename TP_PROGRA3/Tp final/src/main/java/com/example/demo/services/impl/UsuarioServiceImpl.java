@@ -3,6 +3,7 @@ package com.example.demo.services.impl;
 import com.example.demo.dto.CuentaSalidaDTO;
 import com.example.demo.dto.UsuarioEntradaDTO;
 import com.example.demo.dto.UsuarioSalidaDTO;
+import com.example.demo.entities.Credencial;
 import com.example.demo.entities.Usuario;
 import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.services.UsuarioService;
@@ -25,17 +26,22 @@ public class UsuarioServiceImpl implements UsuarioService {
     public Usuario buscarUsuarioPorId(Long id) {
         return usuarioRepository.findById(id).orElse(null);
     }
+
     public Usuario buscarUsuarioPorUsername(String username) {
         return usuarioRepository.findByNombreUsuario(username).orElse(null);
     }
     public void actualizarUsuario(Usuario usuario) {
         usuarioRepository.save(usuario);
     }
+
     public void actualizarUsuarioPorIdDto(Long id, UsuarioEntradaDTO usuarioEntradaDTO) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         usuario.setNombreUsuario(usuarioEntradaDTO.getNombreUsuario());
-        usuario.setPin(usuarioEntradaDTO.getPin());
+        Credencial credencial = Credencial.builder()
+                .pin(usuarioEntradaDTO.getCredencial().getPin())
+                .build();
+        usuario.setCredencial(credencial);
         usuarioRepository.save(usuario);
     }
     public void eliminarUsuario(Long id) {
@@ -50,19 +56,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     public void eliminarUsuarioPorId(Long id) {
         usuarioRepository.deleteById(id);
     }
-    public Usuario login(String nombreUsuario, int pin) {
-        return usuarioRepository
-                .findByNombreUsuarioAndPin(nombreUsuario, pin)
-                .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
-    }
-    public Usuario cambiarPin(String nombreUsuario, int nuevoPin) {
-        Usuario usuario = usuarioRepository
-                .findByNombreUsuario(nombreUsuario)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        usuario.setPin(nuevoPin);
-        return usuarioRepository.save(usuario);
-    }
     public List<Usuario> obtenerTodosLosUsuarios() {
         return usuarioRepository.findAll();
     }
@@ -84,9 +78,13 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (usuarioEntradaDTO == null) {
             return null;
         }
+        Credencial credencial = Credencial.builder()
+                .pin(usuarioEntradaDTO.getCredencial().getPin())
+                .build();
+
         return Usuario.builder()
                 .nombreUsuario(usuarioEntradaDTO.getNombreUsuario())
-                .pin(usuarioEntradaDTO.getPin())
+                .credencial(credencial)
                 .build();
     }
     public Usuario crearUsuarioDto(UsuarioEntradaDTO usuarioEntradaDTO) {

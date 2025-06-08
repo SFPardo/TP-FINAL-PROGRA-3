@@ -34,14 +34,4 @@ public class AutenticadorController {
         return ResponseEntity.ok(new JwtAuthResponse(token));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registrarUsuario(@Valid @RequestBody RegisterDTO registerDto) {
-        try {
-            Usuario usuarioRegistrado = authService.registrarUsuario(registerDto.getNombreUsuario(), registerDto.getPin(), registerDto.getRol());
-            return new ResponseEntity<>("User registered successfully!", HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
-    }
-
 }

@@ -30,7 +30,7 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("Credencial not found for user: " + username);
         }
 
-        Collection<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(usuario.getRol().name()));
+        Collection<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name()));
 
         return new org.springframework.security.core.userdetails.User(
                 usuario.getNombreUsuario(),

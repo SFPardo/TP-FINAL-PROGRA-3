@@ -12,7 +12,5 @@ public interface UsuarioService {
     void eliminarUsuario(Long id);
     void eliminarUsuarioPorUsername(String username);
     void eliminarUsuarioPorId(Long id);
-    Usuario login(String nombreUsuario, int pin);
-    Usuario cambiarPin(String nombreUsuario, int nuevoPin);
     List<Usuario> obtenerTodosLosUsuarios();
 }
