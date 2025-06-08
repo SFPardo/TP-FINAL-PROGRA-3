@@ -1,20 +1,19 @@
 package com.example.demo.dto;
 
-import com.example.demo.entities.enums.TipoRol;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsuarioEntradaDTO {
-    @NotBlank(message = "El nombre de usuario no puede estar vacío")
-    private String nombreUsuario;
-    private CredencialEntradaDTO credencial;
-    @NotNull(message = "El rol no puede ser nulo")
-    private TipoRol rol;
+@Builder
+public class CredencialEntradaDTO {
+    @NotBlank(message = "El PIN no puede estar vacío")
+    @Pattern(regexp = "^\\d{4}$", message = "El PIN debe ser un número de 4 dígitos")
+    String pin;
 }

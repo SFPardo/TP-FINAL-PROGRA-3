@@ -1,5 +1,6 @@
 package com.example.demo.entities;
 
+import com.example.demo.entities.enums.TipoRol;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,7 +29,6 @@ public class Usuario {
             unique = true
     )
     private String nombreUsuario;
-    private int pin;
     @OneToOne(
             mappedBy = "usuario",
             fetch = FetchType.LAZY
@@ -42,6 +42,11 @@ public class Usuario {
     )
     @JsonIgnoreProperties({"movimientoList", "tarjetaList"})
     private List<Cuenta> cuentaList;
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    private Credencial credencial;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rol", nullable = false)
+    private TipoRol rol;
     @UpdateTimestamp
     private LocalDateTime fechaActualizacion;
 }

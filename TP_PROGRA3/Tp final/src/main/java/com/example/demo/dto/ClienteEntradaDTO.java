@@ -13,14 +13,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 
 public class ClienteEntradaDTO {
-    @NotBlank
+    @NotBlank(message = "El nombre del cliente no puede estar vacío")
     private String nombre;
-    @Pattern(regexp = "\\d{8}")
+    @NotBlank(message = "El DNI del cliente no puede estar vacío")
+    @Pattern(regexp = "^\\d{7,8}$", message = "El DNI debe tener 7 u 8 dígitos")
     private String dni;
-    @Email
-    @NotBlank
+    @NotBlank(message = "El email del cliente no puede estar vacío")
+    @Email(message = "Formato de email inválido")
     private String email;
-    @NotBlank
     @Pattern(regexp = "\\d{10}")
     private String telefono;
     @Valid

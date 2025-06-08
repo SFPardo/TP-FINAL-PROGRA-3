@@ -10,6 +10,7 @@ import com.example.demo.services.impl.ClienteServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,8 @@ public class ClienteController {
     @Autowired
     private ClienteServiceImpl clienteServiceImpl;
 
-    @PostMapping
+    @PostMapping("/crear")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<ClienteSalidaDTO> crearCliente(@Valid @RequestBody ClienteEntradaDTO dto) {
         ClienteSalidaDTO cliente = clienteServiceImpl.crearClienteConUsuarioYCuenta(dto);
         return ResponseEntity.ok(cliente);

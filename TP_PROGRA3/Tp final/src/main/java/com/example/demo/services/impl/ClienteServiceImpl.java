@@ -4,18 +4,19 @@ import com.example.demo.dto.ClienteEntradaDTO;
 import com.example.demo.dto.ClienteSalidaDTO;
 import com.example.demo.dto.DomicilioEntradaSalidaDTO;
 import com.example.demo.dto.UsuarioSalidaDTO;
-import com.example.demo.entities.Cliente;
-import com.example.demo.entities.Cuenta;
-import com.example.demo.entities.Domicilio;
-import com.example.demo.entities.Usuario;
+import com.example.demo.entities.*;
 import com.example.demo.entities.enums.TipoCuenta;
 import com.example.demo.repositories.ClienteRepository;
+import com.example.demo.repositories.CredencialRepository;
 import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.services.ClienteService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.example.demo.config.SecurityConfig.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,9 +33,13 @@ public class ClienteServiceImpl implements ClienteService {
     @Autowired
     private final CuentaRepository cuentaRepository;
     @Autowired
+    private final CredencialRepository credencialRepository;
+    @Autowired
     private GeneradorAliasServiceImpl generadorAliasServiceImpl;
     @Autowired
     private GeneradorCbuServiceImpl generadorCbuServiceImpl;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Cliente crearCliente(Cliente cliente) {
@@ -113,6 +118,7 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
+    @Transactional
     public ClienteSalidaDTO crearClienteConUsuarioYCuenta(ClienteEntradaDTO dto){
         if (clienteRepository.findByDni(dto.getDni()).isPresent()) {
             throw new RuntimeException("Ya existe un cliente con ese DNI.");
@@ -136,8 +142,15 @@ public class ClienteServiceImpl implements ClienteService {
 
         Usuario usuario = Usuario.builder()
                 .nombreUsuario(dto.getUsuario().getNombreUsuario())
-                .pin(dto.getUsuario().getPin())
+                .rol(dto.getUsuario().getRol())
                 .build();
+        usuario = usuarioRepository.save(usuario);
+
+        Credencial credencial = Credencial.builder()
+                .usuario(usuario)
+                .pin(passwordEncoder.encode(dto.getUsuario().getCredencial().getPin()))
+                .build();
+        credencialRepository.save(credencial);
 
         String alias = generadorAliasServiceImpl.generarAlias();
         String cbu = generadorCbuServiceImpl.generarCbu();
@@ -150,6 +163,7 @@ public class ClienteServiceImpl implements ClienteService {
                 .limiteSobregiro(BigDecimal.ZERO)
                 .usuario(usuario)
                 .build();
+        cuenta = cuentaRepository.save(cuenta);
 
         usuario.setCuentaList(List.of(cuenta));
 
@@ -174,6 +188,7 @@ public class ClienteServiceImpl implements ClienteService {
         Cliente clienteGuardado = clienteRepository.save(cliente);
         return mapToSalidaDTO(clienteGuardado);
     }
+
     public ClienteSalidaDTO buscarClientePorIdConDTO(Long id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
