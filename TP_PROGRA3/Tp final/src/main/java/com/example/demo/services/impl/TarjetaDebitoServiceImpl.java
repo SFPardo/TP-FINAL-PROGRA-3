@@ -2,12 +2,15 @@ package com.example.demo.services.impl;
 
 import com.example.demo.dto.TarjetaDebitoEntradaDTO;
 import com.example.demo.dto.TarjetaDebitoSalidaDTO;
+import com.example.demo.services.UsuarioService;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.TarjetaDebito;
 import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.TarjetaDebitoRepository;
 import com.example.demo.services.TarjetaDebitoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,6 +27,13 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
 
     @Autowired
     private CuentaRepository cuentaRepository;
+
+    @Autowired
+    private UsuarioService usuarioService;
+
+    @Autowired
+    private TarjetaDebitoRepository tarjetaDebitoRepository;
+
 
     private TarjetaDebitoSalidaDTO mapToSalidaDTO(TarjetaDebito tarjeta) {
         return TarjetaDebitoSalidaDTO.builder()
@@ -126,5 +136,24 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
 
         return true;
     }
+
+    public boolean esDueño(Long tarjetaId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String usernameLogueado = auth.getName();
+
+        var tarjetaOpt = tarjetaDebitoRepository.findById(tarjetaId);
+        if (tarjetaOpt.isEmpty()) {
+            return false;
+        }
+
+        var tarjeta = tarjetaOpt.get();
+
+        String usernameDueño = tarjeta.getCuenta().getUsuario().getNombreUsuario();
+
+        return usernameLogueado.equals(usernameDueño);
+    }
+
+
+
 
 }

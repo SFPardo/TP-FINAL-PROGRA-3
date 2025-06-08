@@ -1,5 +1,7 @@
 package com.example.demo.dto;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -14,6 +16,8 @@ public class TarjetaCreditoEntradaDTO {
     private LocalDate vencimiento;
     private int codigoSeguridad;
     private String marca;
+    @Positive
     private BigDecimal limite;
+    @NotNull
     private long cuentaId;
 }
