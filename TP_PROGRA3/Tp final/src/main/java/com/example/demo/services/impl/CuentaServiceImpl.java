@@ -185,7 +185,12 @@ public class CuentaServiceImpl implements CuentaService {
                 .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el CBU proporcionado."));
         Cuenta cuentaDestino = cuentaRepository.findByCbu(cbuDestino)
                 .orElseThrow(() -> new IllegalArgumentException("No existe una cuenta con el CBU proporcionado."));
-
+        if(cuentaDestino.getTipoCuenta() == TipoCuenta.AHORRO_DOLARES && cuentaOrigen.getTipoCuenta() != TipoCuenta.AHORRO_DOLARES) {
+            throw new IllegalArgumentException("No se puede transferir dinero de una cuenta en pesos a una cuenta de ahorro en dólares.");
+        }
+        if(cuentaOrigen.getTipoCuenta() == TipoCuenta.AHORRO_DOLARES && cuentaDestino.getTipoCuenta() != TipoCuenta.AHORRO_DOLARES) {
+            throw new IllegalArgumentException("No se puede transferir dinero desde una cuenta de ahorro en dólares a una cuenta en pesos.");
+        }
         BigDecimal saldoActualOrigen = cuentaOrigen.getSaldo();
         BigDecimal saldoDespuesDeTransferenciaOrigen = saldoActualOrigen.subtract(monto);
 
@@ -410,6 +415,7 @@ public class CuentaServiceImpl implements CuentaService {
                         .alias(cuenta.getAlias())
                         .saldo(cuenta.getSaldo())
                         .tipoCuenta(cuenta.getTipoCuenta())
+                        .limiteSobregiro(cuenta.getLimiteSobregiro())
                         .fechaCreacion(cuenta.getFechaCreacion())
                         .usuarioId(cuenta.getUsuario().getUsuarioId())
                         .build())
