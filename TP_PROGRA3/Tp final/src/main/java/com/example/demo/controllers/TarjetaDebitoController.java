@@ -51,4 +51,11 @@ public class TarjetaDebitoController {
         boolean exito = service.retirarDinero(id, monto);
         return ResponseEntity.ok(exito);
     }
+
+    @PostMapping("/{id}/pagar-con")
+    public ResponseEntity<Boolean> pagarConTarjeta(@PathVariable Long id, @RequestParam double monto) {
+        boolean exito = service.pagarConTarjeta(id, monto);
+        return ResponseEntity.ok(exito);
+    }
+
 }

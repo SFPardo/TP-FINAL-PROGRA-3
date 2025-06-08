@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -101,4 +102,29 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
         cuentaRepository.save(cuenta);
         return true;
     }
+
+    @Override
+    public boolean pagarConTarjeta(Long tarjetaId, double monto) {
+        TarjetaDebito tarjeta = (TarjetaDebito) repository.findById(tarjetaId)
+                .filter(t -> t instanceof TarjetaDebito)
+                .orElseThrow();
+
+        if (tarjeta.isBloqueada() || tarjeta.getVencimiento().isBefore(LocalDate.now())) {
+            return false;
+        }
+
+        Cuenta cuenta = tarjeta.getCuenta();
+        BigDecimal saldoActual = cuenta.getSaldo();
+        BigDecimal montoADescontar = BigDecimal.valueOf(monto);
+
+        if (saldoActual.compareTo(montoADescontar) < 0) {
+            return false;
+        }
+
+        cuenta.setSaldo(saldoActual.subtract(montoADescontar));
+        cuentaRepository.save(cuenta);
+
+        return true;
+    }
+
 }

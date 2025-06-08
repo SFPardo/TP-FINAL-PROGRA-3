@@ -15,4 +15,6 @@ public interface TarjetaDebitoService {
     void eliminar(Long id);
 
     boolean retirarDinero(Long tarjetaId, double monto);
+    boolean pagarConTarjeta(Long tarjetaId, double monto);
+
 }
