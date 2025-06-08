@@ -1,9 +1,8 @@
 package com.example.demo.controllers;
 
-
 import com.example.demo.dto.LogInDTO;
-import com.example.demo.dto.RegisterDTO;
-import com.example.demo.entities.Usuario;
+import com.example.demo.dto.RegisterDTO; // Aunque no se usa en el método actual, se mantiene para contexto
+import com.example.demo.entities.Usuario; // Aunque no se usa directamente en el controlador, puede ser relevante para DTOs
 import com.example.demo.services.impl.AuthServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,24 +13,75 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-class JwtAuthResponse {
-    public String accessToken;
-    public String tokenType = "Bearer";
+// Importaciones de OpenAPI (Swagger)
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject; // Para ejemplos detallados en request/response
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityScheme; // Para definir el esquema de seguridad si no está en @OpenAPIDefinition
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType; // Para el tipo de esquema de seguridad
 
-    public JwtAuthResponse(String accessToken) {
-        this.accessToken = accessToken;
-    }
-}
+
+// Puedes definir el esquema de seguridad aquí si no lo haces en una clase @OpenAPIDefinition
+@SecurityScheme(
+        name = "bearerAuth", // Nombre que usarás en @SecurityRequirement
+        type = SecuritySchemeType.HTTP,
+        bearerFormat = "JWT",
+        scheme = "bearer",
+        description = "Autenticación JWT usando un Bearer Token"
+)
 @RestController
 @RequestMapping("/autenticador")
+@Tag(name = "Autenticación", description = "Endpoints para registro y autenticación de usuarios")
 public class AutenticadorController {
+
     @Autowired
     private AuthServiceImpl authService;
 
+    @Schema(description = "Respuesta de autenticación JWT")
+    public static class JwtAuthResponse {
+        @Schema(description = "Token de acceso JWT", example = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ1c3VhcmlvMSIsImlhd... (token completo)")
+        public String accessToken;
+        @Schema(description = "Tipo de token (siempre 'Bearer')", example = "Bearer")
+        public String tokenType = "Bearer";
+
+        public JwtAuthResponse(String accessToken) {
+            this.accessToken = accessToken;
+        }
+    }
+
+
+    @Operation(summary = "Autenticar usuario y obtener token JWT",
+            description = "Permite a un usuario iniciar sesión con su nombre de usuario y PIN para obtener un token de acceso JWT. Este token debe ser incluido en las cabeceras de las solicitudes protegidas.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Credenciales del usuario para iniciar sesión",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LogInDTO.class),
+                            examples = @ExampleObject(name = "Ejemplo de solicitud de login", value = "{\"nombreUsuario\": \"usuario1\", \"pin\": \"1234\"}")
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Autenticación exitosa. Se devuelve el token JWT.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = JwtAuthResponse.class),
+                                    examples = @ExampleObject(name = "Ejemplo de respuesta exitosa", value = "{\"accessToken\": \"eyJhbGciOiJIUzUxMiJ9...\", \"tokenType\": \"Bearer\"}")
+                            )),
+                    @ApiResponse(responseCode = "400", description = "Solicitud inválida (ej. campos de LogInDTO nulos o vacíos)",
+                            content = @Content(mediaType = "application/json",
+                                    examples = @ExampleObject(name = "Ejemplo de error de validación", value = "{\"timestamp\": \"2023-10-27T10:00:00.000+00:00\", \"status\": 400, \"error\": \"Bad Request\", \"message\": \"El nombre de usuario no puede estar vacío\", \"path\": \"/autenticador/login\"}")) // Puedes personalizar tu estructura de error
+                    ),
+                    @ApiResponse(responseCode = "401", description = "Credenciales inválidas (nombre de usuario o PIN incorrectos)",
+                            content = @Content(mediaType = "application/json",
+                                    examples = @ExampleObject(name = "Ejemplo de error de credenciales", value = "{\"timestamp\": \"2023-10-27T10:00:00.000+00:00\", \"status\": 401, \"error\": \"Unauthorized\", \"message\": \"Credenciales inválidas\", \"path\": \"/autenticador/login\"}"))) // Puedes personalizar tu estructura de error
+            })
     @PostMapping("/login")
     public ResponseEntity<JwtAuthResponse> autenticarUsuario(@Valid @RequestBody LogInDTO loginDto) {
         String token = authService.autenticarUsuario(loginDto.getNombreUsuario(), loginDto.getPin());
         return ResponseEntity.ok(new JwtAuthResponse(token));
     }
-
 }

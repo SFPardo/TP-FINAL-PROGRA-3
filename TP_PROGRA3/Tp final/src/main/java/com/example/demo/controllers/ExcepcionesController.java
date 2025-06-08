@@ -18,7 +18,6 @@ import java.util.Map;
 @ControllerAdvice
 public class ExcepcionesController{
 
-    // Manejo de excepciones para validaciones de @Valid y @RequestBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
@@ -30,14 +29,13 @@ public class ExcepcionesController{
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Error de validación",
-                "Uno o más campos tienen errores: " + errors, // Incluimos los detalles del error aquí
+                "Uno o más campos tienen errores: " + errors,
                 request.getDescription(false),
                 errors
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    // Manejo de excepciones para recursos no encontrados (ej. por ID en DB)
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(
@@ -51,7 +49,30 @@ public class ExcepcionesController{
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    // Manejo de excepciones para argumentos de tipo incorrecto en path/query params
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Argumento inválido",
+                ex.getMessage() != null ? ex.getMessage() : "Se proporcionó un argumento inválido.",
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponseDTO> handleIllegalStateException(IllegalStateException ex, WebRequest request) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Estado inválido",
+                ex.getMessage() != null ? ex.getMessage() : "El estado actual no es válido para la operación solicitada.",
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseDTO> handleTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
         String errorMessage = String.format("El parámetro '%s' con valor '%s' no pudo ser convertido al tipo requerido '%s'.",
@@ -61,14 +82,23 @@ public class ExcepcionesController{
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Error de tipo de argumento",
-                // Directamente el mensaje de la excepción lanzada, si existe, o el mensaje formateado
                 ex.getMessage() != null ? ex.getMessage() : errorMessage,
                 request.getDescription(false)
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-     //Manejo de tu excepción personalizada (ej. SaldoInsuficienteException)
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponseDTO> handleRuntimeException(RuntimeException ex, WebRequest request) {
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
+                LocalDateTime.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Error interno del servidor",
+                ex.getMessage() != null ? ex.getMessage() : "Ocurrió un error inesperado. Por favor, intente de nuevo más tarde.",
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
     @ExceptionHandler(SaldoInsuficienteException.class)
     public ResponseEntity<ErrorResponseDTO> handleSaldoInsuficienteException(SaldoInsuficienteException ex, WebRequest request) {
@@ -82,7 +112,6 @@ public class ExcepcionesController{
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    // Manejo de cualquier otra excepción no especificada
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGlobalException(Exception ex, WebRequest request) {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(

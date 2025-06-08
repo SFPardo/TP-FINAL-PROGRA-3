@@ -27,7 +27,7 @@ public class PagoProgramadoServiceImpl implements PagoProgramadoService {
     @Override
     @Transactional
     public MovimientoCuenta programarPagoProgramado(Long cuentaId, BigDecimal monto, String descripcion){
-        LocalDateTime retraso = LocalDateTime.now().plusSeconds(60);
+        LocalDateTime retraso = LocalDateTime.now().plusSeconds(10);
         Cuenta cuenta = cuentaRepository.findById(cuentaId)
                 .orElseThrow(() -> new IllegalArgumentException("Cuenta no encontrada"));
         MovimientoCuenta pagoProgramado = MovimientoCuenta.builder()
@@ -57,13 +57,18 @@ public class PagoProgramadoServiceImpl implements PagoProgramadoService {
     @Override
     @org.springframework.transaction.annotation.Transactional(propagation = Propagation.REQUIRES_NEW)
     public void ejecutarPago(MovimientoCuenta pago){
-        Optional<Cuenta> cuenta = cuentaRepository.findById(pago.getCuenta().getCuentaId());
-        if(cuenta.isPresent()){
-            if(cuenta.get().getSaldo().compareTo(pago.getMonto()) >= 0) {
-                cuenta.get().setSaldo(cuenta.get().getSaldo().subtract(pago.getMonto()));
+        Optional<Cuenta> cuentaOptional = cuentaRepository.findById(pago.getCuenta().getCuentaId());
+        if(cuentaOptional.isPresent()){
+            Cuenta cuenta = cuentaOptional.get();
+            BigDecimal saldoActual = cuenta.getSaldo();
+            BigDecimal montoADebitar = pago.getMonto();
+            BigDecimal limiteSobregiro = cuenta.getLimiteSobregiro() != null ? cuenta.getLimiteSobregiro() : BigDecimal.ZERO;
+            BigDecimal saldoDisponibleConSobregiro = saldoActual.add(limiteSobregiro);
+            if(saldoDisponibleConSobregiro.compareTo(montoADebitar) >= 0) {
+                cuenta.setSaldo(saldoActual.subtract(montoADebitar));
                 pago.setTipoMovimiento(TipoMovimiento.EJECUTADO);
                 movimientoCuentaRepository.save(pago);
-                cuentaRepository.save(cuenta.get());
+                cuentaRepository.save(cuenta);
             } else {
                 pago.setTipoMovimiento(TipoMovimiento.FALLIDO);
                 movimientoCuentaRepository.save(pago);
