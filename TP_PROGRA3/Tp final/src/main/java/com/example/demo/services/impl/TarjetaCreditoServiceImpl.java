@@ -9,6 +9,8 @@
     import com.example.demo.services.TarjetaCreditoService;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.stereotype.Service;
+    import org.springframework.transaction.annotation.Transactional;
+
 
     import java.math.BigDecimal;
     import java.time.LocalDate;
@@ -38,6 +40,7 @@
         }
 
         @Override
+        @Transactional
         public TarjetaCreditoSalidaDTO crear(TarjetaCreditoEntradaDTO dto) {
             Cuenta cuenta = cuentaRepository.findById(dto.getCuentaId()).orElseThrow();
             TarjetaCredito tarjeta = TarjetaCredito.builder()
@@ -71,6 +74,7 @@
         }
 
         @Override
+        @Transactional
         public TarjetaCreditoSalidaDTO actualizar(Long id, TarjetaCreditoEntradaDTO dto) {
             TarjetaCredito tarjeta = repository.findById(id).orElseThrow();
             tarjeta.setMarca(dto.getMarca());
@@ -81,11 +85,13 @@
         }
 
         @Override
+        @Transactional
         public void eliminar(Long id) {
             repository.deleteById(id);
         }
 
         @Override
+        @Transactional
         public void pagarTarjeta(Long id, double monto) {
             TarjetaCredito tarjeta = repository.findById(id)
                     .filter(t -> t instanceof TarjetaCredito)
@@ -109,6 +115,7 @@
         }
 
         @Override
+        @Transactional
         public boolean pagarConTarjeta(Long id, double monto) {
             TarjetaCredito tarjeta = repository.findById(id)
                     .filter(t -> t instanceof TarjetaCredito)
