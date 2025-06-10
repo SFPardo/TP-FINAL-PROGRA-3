@@ -1,17 +1,16 @@
 package com.example.demo.controllers;
 import com.example.demo.dto.ClienteSalidaDTO;
 import com.example.demo.dto.DomicilioEntradaSalidaDTO;
-import com.example.demo.dto.UsuarioSalidaDTO;
-import com.example.demo.entities.Cliente;
 import com.example.demo.dto.ClienteEntradaDTO;
-import com.example.demo.entities.Cuenta;
 import com.example.demo.services.impl.ClienteServiceImpl;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -29,12 +28,21 @@ public class ClienteController {
     private ClienteServiceImpl clienteServiceImpl;
 
     // -- METODOS POST -- //
+    @Operation(summary = "Crear un nuevo cliente desde un usuario ADMIN",
+            description = "Crea un nuevo cliente con usuario y cuenta. Accesible solo por ADMIN.Permite otorgar permisos de administrador al cliente.")
+    @PostMapping("/crearAdmin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClienteSalidaDTO> crearClienteAdmin(@Valid @RequestBody ClienteEntradaDTO dto) {
+        ClienteSalidaDTO cliente = clienteServiceImpl.crearClienteAdmin(dto);
+        return ResponseEntity.ok(cliente);
+    }
+
     @Operation(summary = "Crear un nuevo cliente",
-            description = "Crea un nuevo cliente con usuario y cuenta. Accesible por cualquier usuario.")
+            description = "Crea un nuevo cliente con usuario y cuenta. Accesible por cualquier usuario.Solo otorga permisos de cliente al nuevo cliente.")
     @PostMapping("/crear")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<ClienteSalidaDTO> crearCliente(@Valid @RequestBody ClienteEntradaDTO dto) {
-        ClienteSalidaDTO cliente = clienteServiceImpl.crearClienteConUsuarioYCuenta(dto);
+    public ResponseEntity<ClienteSalidaDTO> crearClienteSinPermisos(@Valid @RequestBody ClienteEntradaDTO dto) {
+        ClienteSalidaDTO cliente = clienteServiceImpl.crearClienteSinPermisos(dto);
         return ResponseEntity.ok(cliente);
     }
 
@@ -95,21 +103,21 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @Operation(summary = "Obtener el usuario asociado al cliente autenticado",
-            description = "Devuelve los detalles del usuario del cliente actualmente autenticado.")
-    @GetMapping("/mi-usuario")
-    @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
-    public ResponseEntity<UsuarioSalidaDTO> obtenerUsuarioActual(Long id) {
-        UsuarioSalidaDTO usuario = clienteServiceImpl.obtenerUsuarioActual(id);
-        return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-    }
 
     @Operation(summary = "Ver el domicilio del cliente autenticado",
-            description = "Devuelve los detalles del domicilio del cliente actualmente autenticado.")
+            description = "Devuelve los detalles del domicilio del cliente actualmente autenticado. No requiere ID en la URL.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Domicilio encontrado exitosamente."),
+                    @ApiResponse(responseCode = "404", description = "Domicilio no encontrado para el cliente autenticado (puede que el usuario no tenga cliente asociado o domicilio)."),
+                    @ApiResponse(responseCode = "401", description = "No autorizado (falta token JWT o es inválido).")
+            })
     @GetMapping("/mi-domicilio")
-    @PreAuthorize("hasRole('CLIENTE') or hasRole('ADMIN')")
-    public ResponseEntity<DomicilioEntradaSalidaDTO> verMiDomicilio(Long id) {
-        DomicilioEntradaSalidaDTO domicilio = clienteServiceImpl.verMiDomicilio(id);
+    @PreAuthorize("isAuthenticated()") // Requiere que el usuario esté autenticado
+    public ResponseEntity<DomicilioEntradaSalidaDTO> verMiDomicilio(Authentication authentication) {
+        String nombreUsuario = authentication.getName();
+
+        DomicilioEntradaSalidaDTO domicilio = clienteServiceImpl.verMiDomicilio(nombreUsuario);
+
         return domicilio != null ? ResponseEntity.ok(domicilio) : ResponseEntity.notFound().build();
     }
 
@@ -204,6 +212,20 @@ public class ClienteController {
             @PathVariable Long id,
             @RequestBody DomicilioEntradaSalidaDTO nuevoDomicilio) {
         return ResponseEntity.ok(clienteServiceImpl.actualizarDomicilio(id, nuevoDomicilio));
+    }
+
+    @Operation(summary = "Actualizar el domicilio del cliente autenticado",
+            description = "Permite al cliente autenticado actualizar su propio domicilio. No requiere ID en la URL. El usuario autenticado debe tener el rol CLIENTE o ADMIN.")
+    @PutMapping("/mi-domicilio")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<DomicilioEntradaSalidaDTO> actualizarMiDomicilio(
+            Authentication authentication,
+            @Valid @RequestBody DomicilioEntradaSalidaDTO dto) {
+
+        String nombreUsuario = authentication.getName();
+        DomicilioEntradaSalidaDTO domicilioActualizado = clienteServiceImpl.actualizarDomicilioClienteAutenticado(nombreUsuario, dto);
+
+        return domicilioActualizado != null ? ResponseEntity.ok(domicilioActualizado) : ResponseEntity.notFound().build();
     }
 
     @Operation(summary = "Actualizar cliente por ID",
