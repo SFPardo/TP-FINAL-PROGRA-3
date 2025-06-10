@@ -6,6 +6,7 @@ import com.example.demo.dto.DomicilioEntradaSalidaDTO;
 import com.example.demo.dto.UsuarioSalidaDTO;
 import com.example.demo.entities.*;
 import com.example.demo.entities.enums.TipoCuenta;
+import com.example.demo.entities.enums.TipoRol;
 import com.example.demo.repositories.ClienteRepository;
 import com.example.demo.repositories.CredencialRepository;
 import com.example.demo.repositories.CuentaRepository;
@@ -16,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.example.demo.config.SecurityConfig.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -41,6 +41,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // -- Metodos para obtener sin DTO --//
     @Override
     public Cliente crearCliente(Cliente cliente) {
         return clienteRepository.save(cliente);
@@ -62,9 +63,21 @@ public class ClienteServiceImpl implements ClienteService {
         return clienteRepository.findByTelefono(telefono).orElse(null);
     }
     @Override
+    public List<Cliente> obtenerTodosLosClientes() {
+        return clienteRepository.findAll();
+    }
+    @Override
+    public boolean existeDni(String dni) {
+        return clienteRepository.findByDni(dni).isPresent();
+    }
+
+    // -- Metodos para actualizar sin DTO --//
+    @Override
     public Cliente actualizarCliente(Cliente cliente) {
         return clienteRepository.save(cliente);
     }
+
+    // -- Metodos para eliminar sin DTO --//
     @Override
     public void eliminarCliente(Long id) {
         clienteRepository.deleteById(id);
@@ -83,10 +96,9 @@ public class ClienteServiceImpl implements ClienteService {
             clienteRepository.delete(cliente);
         }
     }
-    @Override
-    public List<Cliente> obtenerTodosLosClientes() {
-        return clienteRepository.findAll();
-    }
+
+
+    //-- Metodos que implementan DTO --//
     @Override
     public ClienteSalidaDTO mapToSalidaDTO(Cliente cliente) {
         DomicilioEntradaSalidaDTO domicilioDTO = new DomicilioEntradaSalidaDTO();
@@ -116,10 +128,9 @@ public class ClienteServiceImpl implements ClienteService {
                 .map(this::mapToSalidaDTO)
                 .toList();
     }
-
     @Override
     @Transactional
-    public ClienteSalidaDTO crearClienteConUsuarioYCuenta(ClienteEntradaDTO dto){
+    public ClienteSalidaDTO crearClienteAdmin(ClienteEntradaDTO dto){
         if (clienteRepository.findByDni(dto.getDni()).isPresent()) {
             throw new RuntimeException("Ya existe un cliente con ese DNI.");
         }
@@ -188,7 +199,77 @@ public class ClienteServiceImpl implements ClienteService {
         Cliente clienteGuardado = clienteRepository.save(cliente);
         return mapToSalidaDTO(clienteGuardado);
     }
+    @Transactional
+    public ClienteSalidaDTO crearClienteSinPermisos(ClienteEntradaDTO dto){
+        // --- Validaciones de existencia ---
+        if (clienteRepository.findByDni(dto.getDni()).isPresent()) {
+            throw new RuntimeException("Ya existe un cliente con ese DNI.");
+        }
+        if (clienteRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new RuntimeException("Ya existe un cliente con ese email.");
+        }
+        if (clienteRepository.findByTelefono(dto.getTelefono()).isPresent()) {
+            throw new RuntimeException("Ya existe un cliente con ese teléfono.");
+        }
+        if (usuarioRepository.findByNombreUsuario(dto.getUsuario().getNombreUsuario()).isPresent()) {
+            throw new RuntimeException("Ya existe un usuario con ese nombre de usuario.");
+        }
+        if (dto.getDomicilio() == null ||
+                dto.getDomicilio().getProvincia() == null ||
+                dto.getDomicilio().getCiudad() == null ||
+                dto.getDomicilio().getCalle() == null ||
+                dto.getDomicilio().getAltura() <= 0) {
+            throw new RuntimeException("Los datos del domicilio están incompletos.");
+        }
 
+        Usuario usuario = Usuario.builder()
+                .nombreUsuario(dto.getUsuario().getNombreUsuario())
+                .rol(TipoRol.CLIENTE)
+                .build();
+        usuario = usuarioRepository.save(usuario);
+
+        Credencial credencial = Credencial.builder()
+                .usuario(usuario)
+                .pin(passwordEncoder.encode(dto.getUsuario().getCredencial().getPin()))
+                .build();
+        credencialRepository.save(credencial);
+
+        String alias = generadorAliasServiceImpl.generarAlias();
+        String cbu = generadorCbuServiceImpl.generarCbu();
+
+        Cuenta cuenta = Cuenta.builder()
+                .alias(alias)
+                .cbu(cbu)
+                .saldo(BigDecimal.ZERO)
+                .tipoCuenta(TipoCuenta.AHORRO_PESOS)
+                .limiteSobregiro(BigDecimal.ZERO)
+                .usuario(usuario)
+                .build();
+        cuenta = cuentaRepository.save(cuenta);
+
+        usuario.setCuentaList(List.of(cuenta));
+
+        Domicilio domicilio = Domicilio.builder()
+                .provincia(dto.getDomicilio().getProvincia())
+                .ciudad(dto.getDomicilio().getCiudad())
+                .calle(dto.getDomicilio().getCalle())
+                .altura(dto.getDomicilio().getAltura())
+                .build();
+
+        Cliente cliente = Cliente.builder()
+                .nombre(dto.getNombre())
+                .dni(dto.getDni())
+                .email(dto.getEmail())
+                .telefono(dto.getTelefono())
+                .domicilio(domicilio)
+                .usuario(usuario)
+                .build();
+
+        usuario.setCliente(cliente);
+
+        Cliente clienteGuardado = clienteRepository.save(cliente);
+        return mapToSalidaDTO(clienteGuardado);
+    }
     public ClienteSalidaDTO buscarClientePorIdConDTO(Long id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
@@ -228,38 +309,25 @@ public class ClienteServiceImpl implements ClienteService {
         return mapToSalidaDTO(clienteRepository.save(cliente));
     }
     @Override
-    public boolean existeDni(String dni) {
-        return clienteRepository.findByDni(dni).isPresent();
-    }
+    public DomicilioEntradaSalidaDTO verMiDomicilio(String nombreUsuario) {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findByNombreUsuario(nombreUsuario);
 
-
-    @Override
-    public UsuarioSalidaDTO obtenerUsuarioActual(Long id) {
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
-        Usuario usuario = cliente.getUsuario();
-        if (usuario != null) {
-            UsuarioSalidaDTO usuarioDto = UsuarioServiceImpl.mapToDto(usuario);
-            return usuarioDto;
+        if (usuarioOptional.isPresent()) {
+            Usuario usuario = usuarioOptional.get();
+            if (usuario.getCliente() != null) {
+                Cliente cliente = usuario.getCliente();
+                if (cliente.getDomicilio() != null) {
+                    Domicilio domicilio = cliente.getDomicilio();
+                    return new DomicilioEntradaSalidaDTO(
+                            domicilio.getProvincia(),
+                            domicilio.getCiudad(),
+                            domicilio.getCalle(),
+                            domicilio.getAltura()
+                    );
+                }
+            }
         }
         return null;
-
-    }
-    @Override
-    public DomicilioEntradaSalidaDTO verMiDomicilio(Long id) {
-        Cliente cliente = clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
-        Domicilio domicilio = cliente.getDomicilio();
-        if (domicilio != null) {
-            DomicilioEntradaSalidaDTO domicilioDto = new DomicilioEntradaSalidaDTO();
-            domicilioDto.setProvincia(domicilio.getProvincia());
-            domicilioDto.setCiudad(domicilio.getCiudad());
-            domicilioDto.setCalle(domicilio.getCalle());
-            domicilioDto.setAltura(domicilio.getAltura());
-            return domicilioDto;
-        }
-        return null;
-
     }
     @Override
     public ClienteSalidaDTO cambiarNombre(Long id, String nuevoNombre) {
@@ -322,5 +390,45 @@ public class ClienteServiceImpl implements ClienteService {
                 .map(this::mapToSalidaDTO)
                 .toList();
     }
+    @Override
+    @Transactional
+    public DomicilioEntradaSalidaDTO actualizarDomicilioClienteAutenticado(String nombreUsuario, DomicilioEntradaSalidaDTO dto) {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findByNombreUsuario(nombreUsuario);
+
+        if (usuarioOptional.isEmpty() || usuarioOptional.get().getCliente() == null) {
+            throw new RuntimeException("Usuario no encontrado o no asociado a un cliente.");
+        }
+
+        Cliente cliente = usuarioOptional.get().getCliente();
+        Domicilio domicilio = cliente.getDomicilio();
+
+        if (domicilio == null) {
+            throw new RuntimeException("El cliente autenticado no tiene un domicilio para actualizar.");
+        }
+
+        if (dto.getProvincia() != null && !dto.getProvincia().isEmpty()) {
+            domicilio.setProvincia(dto.getProvincia());
+        }
+        if (dto.getCiudad() != null && !dto.getCiudad().isEmpty()) {
+            domicilio.setCiudad(dto.getCiudad());
+        }
+        if (dto.getCalle() != null && !dto.getCalle().isEmpty()) {
+            domicilio.setCalle(dto.getCalle());
+        }
+        if (dto.getAltura() > 0) {
+            domicilio.setAltura(dto.getAltura());
+        }
+
+        clienteRepository.save(cliente);
+
+        // Retornar el DTO del domicilio actualizado
+        return new DomicilioEntradaSalidaDTO(
+                domicilio.getProvincia(),
+                domicilio.getCiudad(),
+                domicilio.getCalle(),
+                domicilio.getAltura()
+        );
+    }
+
 
 }

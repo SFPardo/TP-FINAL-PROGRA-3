@@ -22,12 +22,11 @@ public interface ClienteService {
     List<Cliente> obtenerTodosLosClientes();
     ClienteSalidaDTO mapToSalidaDTO(Cliente cliente);
     List<ClienteSalidaDTO> obtenerTodosLosClientesDTO();
-    ClienteSalidaDTO crearClienteConUsuarioYCuenta(ClienteEntradaDTO dto);
+    ClienteSalidaDTO crearClienteAdmin(ClienteEntradaDTO dto);
     ClienteSalidaDTO actualizarDomicilio(Long id, DomicilioEntradaSalidaDTO nuevoDomicilio);
     boolean existeDni(String dni);
     ClienteSalidaDTO actualizarClienteConDTO(Long id, ClienteEntradaDTO dto);
-    public UsuarioSalidaDTO obtenerUsuarioActual(Long id);
-    public DomicilioEntradaSalidaDTO verMiDomicilio(Long id);
+    public DomicilioEntradaSalidaDTO verMiDomicilio(String username);
     public ClienteSalidaDTO cambiarNombre(Long id, String nuevoNombre);
     public ClienteSalidaDTO cambiarEmail(Long id, String nuevoEmail);
     public ClienteSalidaDTO cambiarTelefono(Long id, String nuevoTelefono);
@@ -35,4 +34,5 @@ public interface ClienteService {
     public ClienteSalidaDTO buscarClientePorCbu(String cbu);
     public List<ClienteSalidaDTO> buscarClientesPorProvincia(String provincia);
     public List<ClienteSalidaDTO> buscarClientesPorCiudad(String ciudad);
+    public DomicilioEntradaSalidaDTO actualizarDomicilioClienteAutenticado(String nombreUsuario, DomicilioEntradaSalidaDTO dto);
 }
