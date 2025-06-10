@@ -11,11 +11,12 @@ import com.example.demo.repositories.TarjetaDebitoRepository;
 import com.example.demo.services.MovimientoTarjetaService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-
+@Service
 public class MovimientoTarjetaServiceImpl implements MovimientoTarjetaService {
     @Autowired
     private MovimientoTarjetaRepository movimientoTarjetaRepository;
