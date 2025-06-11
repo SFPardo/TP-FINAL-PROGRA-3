@@ -8,23 +8,18 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-// Importaciones de OpenAPI (Swagger)
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject; // Para ejemplos detallados en request/response
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.security.SecurityScheme; // Para definir el esquema de seguridad si no está en @OpenAPIDefinition
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType; // Para el tipo de esquema de seguridad
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 
 
-// Puedes definir el esquema de seguridad aquí si no lo haces en una clase @OpenAPIDefinition
 @SecurityScheme(
         name = "bearerAuth", // Nombre que usarás en @SecurityRequirement
         type = SecuritySchemeType.HTTP,
@@ -83,5 +78,11 @@ public class AutenticadorController {
     public ResponseEntity<JwtAuthResponse> autenticarUsuario(@Valid @RequestBody LogInDTO loginDto) {
         String token = authService.autenticarUsuario(loginDto.getNombreUsuario(), loginDto.getPin());
         return ResponseEntity.ok(new JwtAuthResponse(token));
+    }
+
+    @PatchMapping("/cambiarPin")
+    public ResponseEntity<String> cambiarPinUsuario(@RequestParam Long usuarioId, @RequestParam String nuevoPin) {
+        authService.cambiarPinUsuario(usuarioId, nuevoPin);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

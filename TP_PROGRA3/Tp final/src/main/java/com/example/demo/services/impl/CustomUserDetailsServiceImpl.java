@@ -1,5 +1,6 @@
 package com.example.demo.services.impl;
 
+import com.example.demo.config.CustomUser;
 import com.example.demo.entities.Credencial;
 import com.example.demo.entities.Usuario;
 import com.example.demo.repositories.UsuarioRepository;
@@ -32,7 +33,8 @@ public class CustomUserDetailsServiceImpl implements UserDetailsService {
 
         Collection<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().name()));
 
-        return new org.springframework.security.core.userdetails.User(
+        return new CustomUser(
+                usuario.getUsuarioId(),
                 usuario.getNombreUsuario(),
                 credencial.getPin(),
                 authorities
