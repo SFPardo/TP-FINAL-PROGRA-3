@@ -32,4 +32,23 @@ public class AuthServiceImpl {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         return jwtTokenProvider.generateToken(authentication);
     }
+
+    public void cambiarPinUsuario(Long usuarioId, String nuevoPin) {
+        var credencial = credentialRepository.findByUsuario_UsuarioId(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Credencial no encontrada"));
+        if(nuevoPin == null || nuevoPin.isEmpty()) {
+            throw new IllegalArgumentException("El nuevo PIN no puede ser nulo o vacío");
+        }
+        if(nuevoPin.length() < 4) {
+            throw new IllegalArgumentException("El nuevo PIN debe tener al menos 4 caracteres");
+        }
+        if (!nuevoPin.matches("\\d+")) {
+            throw new IllegalArgumentException("El nuevo PIN debe contener solo dígitos");
+        }
+        if (credencial.getPin().equals(nuevoPin)) {
+            throw new IllegalArgumentException("El nuevo PIN no puede ser igual al PIN actual");
+        }
+        credencial.setPin(passwordEncoder.encode(nuevoPin));
+        credentialRepository.save(credencial);
+    }
 }
