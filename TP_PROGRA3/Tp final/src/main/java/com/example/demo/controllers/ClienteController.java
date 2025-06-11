@@ -1,16 +1,16 @@
 package com.example.demo.controllers;
 import com.example.demo.dto.ClienteSalidaDTO;
 import com.example.demo.dto.DomicilioEntradaSalidaDTO;
-import com.example.demo.dto.UsuarioSalidaDTO;
-import com.example.demo.entities.Cliente;
 import com.example.demo.dto.ClienteEntradaDTO;
-import com.example.demo.entities.Cuenta;
 import com.example.demo.services.impl.ClienteServiceImpl;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -27,19 +27,38 @@ public class ClienteController {
     @Autowired
     private ClienteServiceImpl clienteServiceImpl;
 
-    @PostMapping("/crear")
-    @PreAuthorize("permitAll()")
-    public ResponseEntity<ClienteSalidaDTO> crearCliente(@Valid @RequestBody ClienteEntradaDTO dto) {
-        ClienteSalidaDTO cliente = clienteServiceImpl.crearClienteConUsuarioYCuenta(dto);
+    // -- METODOS POST -- //
+    @Operation(summary = "Crear un nuevo cliente desde un usuario ADMIN",
+            description = "Crea un nuevo cliente con usuario y cuenta. Accesible solo por ADMIN.Permite otorgar permisos de administrador al cliente.")
+    @PostMapping("/crearAdmin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClienteSalidaDTO> crearClienteAdmin(@Valid @RequestBody ClienteEntradaDTO dto) {
+        ClienteSalidaDTO cliente = clienteServiceImpl.crearClienteAdmin(dto);
         return ResponseEntity.ok(cliente);
     }
 
+    @Operation(summary = "Crear un nuevo cliente",
+            description = "Crea un nuevo cliente con usuario y cuenta. Accesible por cualquier usuario.Solo otorga permisos de cliente al nuevo cliente.")
+    @PostMapping("/crear")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<ClienteSalidaDTO> crearClienteSinPermisos(@Valid @RequestBody ClienteEntradaDTO dto) {
+        ClienteSalidaDTO cliente = clienteServiceImpl.crearClienteSinPermisos(dto);
+        return ResponseEntity.ok(cliente);
+    }
+
+    // -- METODOS GET -- //
+    @Operation(summary = "Obtener todos los clientes",
+            description = "Solo accesible por usuarios con rol ADMIN. Devuelve una lista de todos los clientes.")
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ClienteSalidaDTO>> listarClientes() {
         return ResponseEntity.ok(clienteServiceImpl.obtenerTodosLosClientesDTO());
     }
 
-    @GetMapping("/{id}")
+    @Operation(summary = "Buscar cliente por ID",
+            description = "Accesible por ADMIN (cualquier ID).")
+    @GetMapping("/id/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> buscarPorId(@PathVariable Long id) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.buscarClientePorIdConDTO(id);
@@ -48,7 +67,10 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/{dni}")
+    @Operation(summary = "Buscar cliente por DNI",
+            description = "Accesible por ADMIN (cualquier DNI)")
+    @GetMapping("/dni/{dni}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> buscarPorDni(@PathVariable String dni) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.mapToSalidaDTO(clienteServiceImpl.buscarClientePorDni(dni));
@@ -57,7 +79,10 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/{email}")
+    @Operation(summary = "Buscar cliente por email",
+            description = "Accesible por ADMIN (cualquier email)")
+    @GetMapping("/email/{email}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> buscarPorEmail(@PathVariable String email) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.mapToSalidaDTO(clienteServiceImpl.buscarClientePorEmail(email));
@@ -66,7 +91,10 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/{telefono}")
+    @Operation(summary = "Buscar cliente por telefono",
+            description = "Accesible por ADMIN (cualquier telefono)")
+    @GetMapping("/telefono/{telefono}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> buscarPorTelefono(@PathVariable String telefono) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.mapToSalidaDTO(clienteServiceImpl.buscarClientePorTelefono(telefono));
@@ -76,63 +104,27 @@ public class ClienteController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarClientePorId(@PathVariable Long id) {
-        clienteServiceImpl.eliminarCliente(id);
-        return ResponseEntity.noContent().build();
-    }
-    @DeleteMapping("/{dni}")
-    public ResponseEntity<Void> eliminarClientePorDni(@PathVariable String dni) {
-        clienteServiceImpl.eliminarClientePorDni(dni);
-        return ResponseEntity.noContent().build();
-    }
-    @DeleteMapping("/{email}")
-    public ResponseEntity<Void> eliminarClientePorEmail(@PathVariable String email) {
-        clienteServiceImpl.eliminarClientePorEmail(email);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PutMapping("/{id}/domicilio")
-    public ResponseEntity<ClienteSalidaDTO> actualizarDomicilio(
-            @PathVariable Long id,
-            @RequestBody DomicilioEntradaSalidaDTO nuevoDomicilio) {
-        return ResponseEntity.ok(clienteServiceImpl.actualizarDomicilio(id, nuevoDomicilio));
-    }
-
-    @GetMapping("/mi-usuario")
-    public ResponseEntity<UsuarioSalidaDTO> obtenerUsuarioActual(Long id) {
-        UsuarioSalidaDTO usuario = clienteServiceImpl.obtenerUsuarioActual(id);
-        return usuario != null ? ResponseEntity.ok(usuario) : ResponseEntity.notFound().build();
-    }
-
+    @Operation(summary = "Ver el domicilio del cliente autenticado",
+            description = "Devuelve los detalles del domicilio del cliente actualmente autenticado. No requiere ID en la URL.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Domicilio encontrado exitosamente."),
+                    @ApiResponse(responseCode = "404", description = "Domicilio no encontrado para el cliente autenticado (puede que el usuario no tenga cliente asociado o domicilio)."),
+                    @ApiResponse(responseCode = "401", description = "No autorizado (falta token JWT o es inválido).")
+            })
     @GetMapping("/mi-domicilio")
-    public ResponseEntity<DomicilioEntradaSalidaDTO> verMiDomicilio(Long id) {
-        DomicilioEntradaSalidaDTO domicilio = clienteServiceImpl.verMiDomicilio(id);
+    @PreAuthorize("isAuthenticated()") // Requiere que el usuario esté autenticado
+    public ResponseEntity<DomicilioEntradaSalidaDTO> verMiDomicilio(Authentication authentication) {
+        String nombreUsuario = authentication.getName();
+
+        DomicilioEntradaSalidaDTO domicilio = clienteServiceImpl.verMiDomicilio(nombreUsuario);
+
         return domicilio != null ? ResponseEntity.ok(domicilio) : ResponseEntity.notFound().build();
     }
 
-    @PatchMapping("/{id}/nombre")
-    public ResponseEntity<ClienteSalidaDTO> actualizarNombre(
-            @PathVariable Long id,
-            @RequestParam String nuevoNombre) {
-        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarNombre(id, nuevoNombre);
-        return ResponseEntity.ok(clienteActualizado);
-    }
-    @PatchMapping("/{id}/email")
-    public ResponseEntity<ClienteSalidaDTO> actualizarEmail(
-            @PathVariable Long id,
-            @RequestParam String nuevoEmail) {
-        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarEmail(id, nuevoEmail);
-        return ResponseEntity.ok(clienteActualizado);
-    }
-    @PatchMapping("/{id}/telefono")
-    public ResponseEntity<ClienteSalidaDTO> actualizarTelefono(
-            @PathVariable Long id,
-            @RequestBody String nuevoTelefono) {
-        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarTelefono(id, nuevoTelefono);
-        return ResponseEntity.ok(clienteActualizado);
-    }
-    @GetMapping("/{alias}")
+    @Operation(summary = "Buscar cliente por Alias de cuenta",
+            description = "Accesible por ADMIN (cualquier alias).")
+    @GetMapping("/alias/{alias}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> obtenerPorAlias(@PathVariable String alias) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.buscarClientePorAlias(alias);
@@ -141,7 +133,10 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/{cbu}")
+    @Operation(summary = "Buscar cliente por CBU",
+            description = "Accesible por ADMIN (cualquier CBU).")
+    @GetMapping("/cbu/{cbu}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> obtenerPorCbu(@PathVariable String cbu) {
         try {
             ClienteSalidaDTO dto = clienteServiceImpl.buscarClientePorCbu(cbu);
@@ -150,7 +145,11 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/{provincia}")
+
+    @Operation(summary = "Buscar clientes por provincia",
+            description = "Accesible por ADMIN (cualquier provincia).")
+    @GetMapping("/provincia/{provincia}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ClienteSalidaDTO>> obtenerPorProvincia(@PathVariable String provincia) {
         try {
             List<ClienteSalidaDTO> clientes = clienteServiceImpl.buscarClientesPorProvincia(provincia);
@@ -159,7 +158,11 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
-    @GetMapping("/{ciudad}")
+
+    @Operation(summary = "Buscar clientes por ciudad",
+            description = "Accesible por ADMIN (cualquier ciudad).")
+    @GetMapping("/ciudad/{ciudad}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ClienteSalidaDTO>> obtenerPorCiudad(@PathVariable String ciudad) {
         try {
             List<ClienteSalidaDTO> clientes = clienteServiceImpl.buscarClientesPorCiudad(ciudad);
@@ -168,6 +171,96 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    // -- METODOS DELETE -- //
+
+    @Operation(summary = "Eliminar cliente por ID",
+            description = "Accesible por ADMIN (cualquier ID). Elimina un cliente por su ID.")
+    @DeleteMapping("/id/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> eliminarClientePorId(@PathVariable Long id) {
+        clienteServiceImpl.eliminarCliente(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Eliminar cliente por DNI",
+            description = "Accesible por ADMIN (cualquier DNI). Elimina un cliente por su DNI.")
+    @DeleteMapping("/dni/{dni}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> eliminarClientePorDni(@PathVariable String dni) {
+        clienteServiceImpl.eliminarClientePorDni(dni);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Eliminar cliente por email",
+            description = "Accesible por ADMIN (cualquier email). Elimina un cliente por su email.")
+    @DeleteMapping("/email/{email}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> eliminarClientePorEmail(@PathVariable String email) {
+        clienteServiceImpl.eliminarClientePorEmail(email);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    // -- METODOS PUT y PATCH -- //
+
+    @Operation(summary = "Actualizar cliente por ID",
+            description = "Accesible por ADMIN (cualquier ID). Actualiza los datos de un cliente.")
+    @PutMapping("/{id}/domicilio")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClienteSalidaDTO> actualizarDomicilio(
+            @PathVariable Long id,
+            @RequestBody DomicilioEntradaSalidaDTO nuevoDomicilio) {
+        return ResponseEntity.ok(clienteServiceImpl.actualizarDomicilio(id, nuevoDomicilio));
+    }
+
+    @Operation(summary = "Actualizar el domicilio del cliente autenticado",
+            description = "Permite al cliente autenticado actualizar su propio domicilio. No requiere ID en la URL. El usuario autenticado debe tener el rol CLIENTE o ADMIN.")
+    @PutMapping("/mi-domicilio")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<DomicilioEntradaSalidaDTO> actualizarMiDomicilio(
+            Authentication authentication,
+            @Valid @RequestBody DomicilioEntradaSalidaDTO dto) {
+
+        String nombreUsuario = authentication.getName();
+        DomicilioEntradaSalidaDTO domicilioActualizado = clienteServiceImpl.actualizarDomicilioClienteAutenticado(nombreUsuario, dto);
+
+        return domicilioActualizado != null ? ResponseEntity.ok(domicilioActualizado) : ResponseEntity.notFound().build();
+    }
+
+    @Operation(summary = "Actualizar cliente por ID",
+            description = "Accesible por ADMIN (cualquier ID). Actualiza los datos de un cliente.")
+    @PatchMapping("/{id}/nombre")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClienteSalidaDTO> actualizarNombre(
+            @PathVariable Long id,
+            @RequestParam String nuevoNombre) {
+        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarNombre(id, nuevoNombre);
+        return ResponseEntity.ok(clienteActualizado);
+    }
+
+    @Operation(summary = "Actualizar email por ID",
+            description = "Accesible por ADMIN (cualquier ID). Actualiza los datos de un cliente.")
+    @PatchMapping("/{id}/email")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClienteSalidaDTO> actualizarEmail(
+            @PathVariable Long id,
+            @RequestParam String nuevoEmail) {
+        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarEmail(id, nuevoEmail);
+        return ResponseEntity.ok(clienteActualizado);
+    }
+
+    @Operation(summary = "Actualizar telefono por ID",
+            description = "Accesible por ADMIN (cualquier ID). Actualiza los datos de un cliente.")
+    @PatchMapping("/{id}/telefono")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ClienteSalidaDTO> actualizarTelefono(
+            @PathVariable Long id,
+            @RequestBody String nuevoTelefono) {
+        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarTelefono(id, nuevoTelefono);
+        return ResponseEntity.ok(clienteActualizado);
+    }
+
 
 
 

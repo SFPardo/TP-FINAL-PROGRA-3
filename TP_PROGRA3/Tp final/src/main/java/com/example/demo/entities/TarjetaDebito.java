@@ -12,9 +12,11 @@ import java.math.BigDecimal;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
+@PrimaryKeyJoinColumn(name = "tarjeta_id")
 @Table(
         name = "tbl_tarjeta_debito"
 )
+
 public class TarjetaDebito extends Tarjeta{
     private BigDecimal saldoDisponible;
 

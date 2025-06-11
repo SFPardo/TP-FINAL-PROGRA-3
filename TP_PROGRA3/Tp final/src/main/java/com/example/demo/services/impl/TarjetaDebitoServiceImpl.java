@@ -8,6 +8,7 @@ import com.example.demo.entities.TarjetaDebito;
 import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.TarjetaDebitoRepository;
 import com.example.demo.services.TarjetaDebitoService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Service
+@Service("tarjetaDebitoServiceImpl") 
 public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
 
     @Autowired
@@ -47,6 +48,7 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
     }
 
     @Override
+    @Transactional
     public TarjetaDebitoSalidaDTO crear(TarjetaDebitoEntradaDTO dto) {
         Cuenta cuenta = cuentaRepository.findById(dto.getCuentaId()).orElseThrow();
         TarjetaDebito tarjeta = TarjetaDebito.builder()
@@ -78,6 +80,7 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
     }
 
     @Override
+    @Transactional
     public TarjetaDebitoSalidaDTO actualizar(Long id, TarjetaDebitoEntradaDTO dto) {
         TarjetaDebito tarjeta = repository.findById(id).orElseThrow();
         tarjeta.setMarca(dto.getMarca());
@@ -86,11 +89,13 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
     }
 
     @Override
+    @Transactional
     public void eliminar(Long id) {
         repository.deleteById(id);
     }
 
     @Override
+    @Transactional
     public boolean retirarDinero(Long tarjetaId, double monto) {
         TarjetaDebito tarjeta = repository.findById(tarjetaId)
                 .filter(t -> t instanceof TarjetaDebito)
@@ -114,6 +119,7 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
     }
 
     @Override
+    @Transactional
     public boolean pagarConTarjeta(Long tarjetaId, double monto) {
         TarjetaDebito tarjeta = (TarjetaDebito) repository.findById(tarjetaId)
                 .filter(t -> t instanceof TarjetaDebito)
@@ -139,18 +145,23 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
 
     public boolean esDueño(Long tarjetaId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String usernameLogueado = auth.getName();
-
-        var tarjetaOpt = tarjetaDebitoRepository.findById(tarjetaId);
-        if (tarjetaOpt.isEmpty()) {
+        if (auth == null || !auth.isAuthenticated()) {
             return false;
         }
 
-        var tarjeta = tarjetaOpt.get();
 
-        String usernameDueño = tarjeta.getCuenta().getUsuario().getNombreUsuario();
+        if (auth.getAuthorities().stream()
+                .anyMatch(g -> g.getAuthority().equals("ROLE_ADMIN"))) {
+            return true;
+        }
 
-        return usernameLogueado.equals(usernameDueño);
+
+        return tarjetaDebitoRepository.findById(tarjetaId)
+                .map(tarjeta -> {
+                    String usernameDueño = tarjeta.getCuenta().getUsuario().getNombreUsuario();
+                    return auth.getName().equals(usernameDueño);
+                })
+                .orElse(false);
     }
 
 
