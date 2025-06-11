@@ -1,6 +1,6 @@
-package com.example.demo.config; // Puedes ajustar el paquete
+package com.example.demo.config;
 
-import com.example.demo.entities.Usuario; // Asegúrate de importar tu entidad Usuario
+import com.example.demo.entities.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
