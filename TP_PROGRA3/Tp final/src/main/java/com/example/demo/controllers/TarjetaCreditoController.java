@@ -13,6 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
 
 import java.util.List;
 
@@ -98,5 +102,15 @@ public class TarjetaCreditoController {
 
         tarjetaCreditoService.pagarConTarjeta(idTarjeta, monto);
         return ResponseEntity.ok("Compra con tarjeta realizada con éxito");
+    }
+
+    @Operation(summary = "Listar tarjetas de crédito paginadas")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/paginado")
+    public Page<TarjetaCreditoSalidaDTO> listarPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return tarjetaCreditoService.listarPaginado(pageable);
     }
 }
