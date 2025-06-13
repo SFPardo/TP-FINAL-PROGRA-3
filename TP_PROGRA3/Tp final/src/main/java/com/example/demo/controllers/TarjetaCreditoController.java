@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -68,6 +69,15 @@ public class TarjetaCreditoController {
         TarjetaCreditoSalidaDTO tarjetaActualizada = tarjetaCreditoService.actualizar(id, dto);
         return ResponseEntity.ok(tarjetaActualizada);
     }
+
+    @Operation(summary = "Actualizar limite tarjeta de crédito")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('CLIENTE') and @tarjetaCreditoServiceImpl.esDueño(#id)")
+    @PatchMapping("/{id}/cambiarLimite")
+    public ResponseEntity<TarjetaCreditoSalidaDTO>actualizarLimite(@PathVariable Long id, @RequestParam BigDecimal limite){
+        TarjetaCreditoSalidaDTO tarjetaCreditoSalidaDTO = tarjetaCreditoService.actualizarLimite(id, limite);
+        return ResponseEntity.ok(tarjetaCreditoSalidaDTO);
+    }
+
 
     @Operation(summary = "Eliminar tarjeta de crédito")
     @ApiResponse(responseCode = "204", description = "Tarjeta eliminada correctamente")

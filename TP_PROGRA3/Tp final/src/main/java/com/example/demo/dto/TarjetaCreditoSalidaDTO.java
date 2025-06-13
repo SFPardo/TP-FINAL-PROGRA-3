@@ -16,5 +16,6 @@ public class TarjetaCreditoSalidaDTO {
     private boolean bloqueada;
     private String marca;
     private BigDecimal limite;
+    private BigDecimal saldo;
     private long cuentaId;
 }

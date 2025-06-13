@@ -2,6 +2,8 @@ package com.example.demo.services.impl;
 
 import com.example.demo.dto.TarjetaDebitoEntradaDTO;
 import com.example.demo.dto.TarjetaDebitoSalidaDTO;
+import com.example.demo.entities.MovimientoTarjeta;
+import com.example.demo.entities.enums.TipoMovimiento;
 import com.example.demo.services.UsuarioService;
 import com.example.demo.entities.Cuenta;
 import com.example.demo.entities.TarjetaDebito;
@@ -90,6 +92,7 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
         return mapToSalidaDTO(repository.save(tarjeta));
     }
 
+
     @Override
     @Transactional
     public void eliminar(Long id) {
@@ -116,6 +119,12 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
         }
 
         cuenta.setSaldo(cuenta.getSaldo().subtract(java.math.BigDecimal.valueOf(monto)));
+        MovimientoTarjeta movimientoTarjeta = MovimientoTarjeta.builder()
+                .monto(montoARetirar)
+                .descripcion("Pago con tarjeta debito")
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
+                .build();
+        tarjeta.addMovimiento(movimientoTarjeta);
         cuentaRepository.save(cuenta);
         return true;
     }
@@ -140,6 +149,12 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
         }
 
         cuenta.setSaldo(saldoActual.subtract(montoADescontar));
+        MovimientoTarjeta movimientoTarjeta = MovimientoTarjeta.builder()
+                .monto(montoADescontar)
+                .descripcion("Pago con tarjeta debito")
+                .tipoMovimiento(TipoMovimiento.EJECUTADO)
+                .build();
+        tarjeta.addMovimiento(movimientoTarjeta);
         cuentaRepository.save(cuenta);
 
         return true;

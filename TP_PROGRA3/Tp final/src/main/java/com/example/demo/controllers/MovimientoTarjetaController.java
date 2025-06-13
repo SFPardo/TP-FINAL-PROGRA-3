@@ -107,8 +107,6 @@ public class MovimientoTarjetaController {
                     @ApiResponse(responseCode = "403", description = "Acceso prohibido (CLIENTE no es dueño de la cuenta asociada a la tarjeta)"),
                     @ApiResponse(responseCode = "404", description = "Tarjeta no encontrada")
             })
-    // Nota: La expresión @cuentaServiceImpl.esDueño(#cuentaId, principal.username) implica que tarjetaId está relacionado con una cuentaId.
-    // Asegúrate de que tu lógica de servicio maneje esta relación correctamente para la autorización.
     @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @cuentaServiceImpl.esDueño(#cuentaId, principal.username))")
     @GetMapping("/porTarjeta/{tarjetaId}")
     public ResponseEntity<List<MovimientoTarjetaSalidaDTO>> listarMovimientosPorTarjeta(@PathVariable Long tarjetaId) {
