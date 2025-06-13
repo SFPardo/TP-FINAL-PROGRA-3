@@ -11,11 +11,11 @@ import com.example.demo.exceptions.SaldoInsuficienteException;
 import com.example.demo.repositories.CuentaRepository;
 import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.services.CuentaService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -385,41 +385,31 @@ public class CuentaServiceImpl implements CuentaService {
     }
 
     @Override
-    public List<CuentaSalidaDTO> listarCuentas(){
-        List<Cuenta> cuentas = cuentaRepository.findAll();
-        return cuentas.stream()
-                .map(cuenta -> CuentaSalidaDTO.builder()
-                        .cuentaId(cuenta.getCuentaId())
-                        .cbu(cuenta.getCbu())
-                        .alias(cuenta.getAlias())
-                        .saldo(cuenta.getSaldo())
-                        .tipoCuenta(cuenta.getTipoCuenta())
-                        .fechaCreacion(cuenta.getFechaCreacion())
-                        .limiteSobregiro(cuenta.getLimiteSobregiro())
-                        .usuarioId(cuenta.getUsuario().getUsuarioId())
-                        .build())
-                .toList();
+    public Page<CuentaSalidaDTO> listarCuentas(Pageable pageable){
+        return cuentaRepository.findAll(pageable)
+                .map(this::mapToSalidaDTO);
     }
 
     @Override
-    public List<CuentaSalidaDTO> listarCuentasPorUsuario(Long usuarioId){
+    public Page<CuentaSalidaDTO> listarCuentasPorUsuario(Pageable pageable, Long usuarioId) {
         if (usuarioId == null) {
             throw new IllegalArgumentException("El ID del usuario no puede ser nulo.");
         }
-        List<Cuenta> cuentas = cuentaRepository.findByUsuario_UsuarioId(usuarioId);
+        Page<Cuenta> cuentasPage = cuentaRepository.findByUsuario_UsuarioId(usuarioId, pageable);
+        return cuentasPage.map(this::mapToSalidaDTO);
+    }
 
-        return cuentas.stream()
-                .map(cuenta -> CuentaSalidaDTO.builder()
-                        .cuentaId(cuenta.getCuentaId())
-                        .cbu(cuenta.getCbu())
-                        .alias(cuenta.getAlias())
-                        .saldo(cuenta.getSaldo())
-                        .tipoCuenta(cuenta.getTipoCuenta())
-                        .limiteSobregiro(cuenta.getLimiteSobregiro())
-                        .fechaCreacion(cuenta.getFechaCreacion())
-                        .usuarioId(cuenta.getUsuario().getUsuarioId())
-                        .build())
-                .toList();
+    public CuentaSalidaDTO mapToSalidaDTO(Cuenta cuenta) {
+        return CuentaSalidaDTO.builder()
+                .cuentaId(cuenta.getCuentaId())
+                .cbu(cuenta.getCbu())
+                .alias(cuenta.getAlias())
+                .saldo(cuenta.getSaldo())
+                .tipoCuenta(cuenta.getTipoCuenta())
+                .fechaCreacion(cuenta.getFechaCreacion())
+                .limiteSobregiro(cuenta.getLimiteSobregiro())
+                .usuarioId(cuenta.getUsuario().getUsuarioId())
+                .build();
     }
 
     public boolean esDueño(Long cuentaId, String nombreUsuario) {

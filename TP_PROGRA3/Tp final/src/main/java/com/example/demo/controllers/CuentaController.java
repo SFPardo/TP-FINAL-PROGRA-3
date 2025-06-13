@@ -5,6 +5,8 @@ import com.example.demo.dto.CuentaSalidaDTO;
 import com.example.demo.services.impl.CuentaServiceImpl;
 import com.example.demo.services.impl.PagoProgramadoServiceImpl;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -369,9 +371,9 @@ public class CuentaController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<CuentaSalidaDTO>> listarCuentas(){
-        List<CuentaSalidaDTO> salida = cuentaServiceImpl.listarCuentas();
-        return ResponseEntity.ok(salida);
+    public Page<CuentaSalidaDTO> listarCuentas(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        return cuentaServiceImpl.listarCuentas(pageable);
     }
 
     @Operation(
@@ -389,11 +391,9 @@ public class CuentaController {
     })
     @PreAuthorize("hasRole('ADMIN') or (hasRole('CLIENTE') and @cuentaServiceImpl.esDueñoPorUsuarioId(#usuarioId, principal.username))")
     @GetMapping("/porUsuario/{usuarioId}")
-    public ResponseEntity<List<CuentaSalidaDTO>> listarCuentasUsuario(
-            @Parameter(description = "ID del usuario cuyas cuentas se desean listar", required = true, example = "1")
-            @PathVariable Long usuarioId){
-        List <CuentaSalidaDTO> salida = cuentaServiceImpl.listarCuentasPorUsuario(usuarioId);
-        return ResponseEntity.ok(salida);
+    public Page<CuentaSalidaDTO> listarCuentasUsuario(@Parameter(description = "ID del usuario cuyas cuentas se desean listar", required = true, example = "1") @PathVariable Long usuarioId, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size){
+        Pageable pageable = Pageable.ofSize(size).withPage(page);
+        return cuentaServiceImpl.listarCuentasPorUsuario(pageable, usuarioId);
     }
 
 }

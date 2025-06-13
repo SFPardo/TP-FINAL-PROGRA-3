@@ -6,6 +6,8 @@ import com.example.demo.entities.Usuario;
 import com.example.demo.entities.enums.TipoCuenta;
 import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -23,7 +25,7 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
     Optional<Cuenta> findByAlias(String alias);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Cuenta> findById(Long id);
-    List<Cuenta> findByUsuario_UsuarioId(Long usuarioId);
+    Page<Cuenta> findByUsuario_UsuarioId(Long usuarioId, Pageable pageable);
     boolean existsByUsuarioAndTipoCuenta(Usuario usuario, TipoCuenta tipoCuenta);
 
     @Modifying
