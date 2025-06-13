@@ -12,6 +12,8 @@ import com.example.demo.services.UsuarioService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -81,6 +83,15 @@ public class UsuarioServiceImpl implements UsuarioService {
         }
         return new UsuarioSalidaDTO(usuario.getUsuarioId(), usuario.getNombreUsuario());
     }
+    public UsuarioSalidaDTO mapToSalidaDTO(Usuario usuario) {
+        if (usuario == null) {
+            return null;
+        }
+        return new UsuarioSalidaDTO(
+                usuario.getUsuarioId(),
+                usuario.getNombreUsuario()
+        );
+    }
     public List<UsuarioSalidaDTO> mapToDtoList(List<Usuario> usuarios) {
         return usuarios.stream()
                 .map(UsuarioServiceImpl::mapToDto)
@@ -88,6 +99,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
     public List<UsuarioSalidaDTO> obtenerTodosLosUsuariosDTO() {
         return mapToDtoList(usuarioRepository.findAll());
+    }
+    public Page<UsuarioSalidaDTO> obtenerTodosLosUsuariosPaginados(Pageable pageable) {
+        Page<Usuario> usuariosPage = usuarioRepository.findAll(pageable);
+        return usuariosPage.map(this::mapToSalidaDTO);
     }
     public Usuario mapFromDto(UsuarioEntradaDTO usuarioEntradaDTO) {
         if (usuarioEntradaDTO == null) {
