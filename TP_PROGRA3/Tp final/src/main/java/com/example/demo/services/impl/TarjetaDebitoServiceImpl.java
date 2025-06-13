@@ -14,13 +14,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Service("tarjetaDebitoServiceImpl") 
+@Service("tarjetaDebitoServiceImpl")
 public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
 
     @Autowired
@@ -164,6 +168,11 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
                 .orElse(false);
     }
 
+    @Override
+    public Page<TarjetaDebitoSalidaDTO> listarPaginado(Pageable pageable) {
+        return tarjetaDebitoRepository.findAll(pageable)
+                .map(this::mapToSalidaDTO);
+    }
 
 
 
