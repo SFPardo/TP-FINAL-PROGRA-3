@@ -22,4 +22,5 @@ public class MovimientoTarjetaSalidaDTO {
     private String descripcion;
     private BigDecimal monto;
     private LocalDateTime fecha;
+    private TipoMovimiento tipoMovimiento;
 }
