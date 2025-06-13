@@ -4,12 +4,16 @@ import com.example.demo.dto.*;
 import com.example.demo.entities.Usuario;
 import com.example.demo.services.impl.UsuarioServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -26,14 +30,26 @@ public class UsuarioController {
 
 
     // -- Metodos GET --//
-    @Operation(summary = "Obtener todos los usuarios",
-    description = "Solo accesible por usuarios con rol ADMIN. Devuelve una lista de todos los usuarios.")
+    @Operation(summary = "Obtener todos los usuarios paginados",
+            description = "Solo accesible por usuarios con rol ADMIN. Devuelve una lista paginada de todos los usuarios.",
+            parameters = {
+                    @Parameter(name = "page", description = "Número de página (0-indexed).", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "0")),
+                    @Parameter(name = "size", description = "Número de elementos por página.", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "10")),
+                    @Parameter(name = "sort", description = "Criterio de ordenamiento (ej. nombreUsuario,asc o usuarioId,desc).", in = ParameterIn.QUERY, schema = @Schema(type = "string", example = "nombreUsuario,asc"))
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Lista paginada de usuarios obtenida exitosamente.",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = Page.class, subTypes = {UsuarioSalidaDTO.class}))),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado. Se requiere el rol ADMIN.")
+            })
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UsuarioSalidaDTO>> obtenerTodosLosUsuariosSalida() {
-        List<UsuarioSalidaDTO> usuarios = usuarioServiceImpl.obtenerTodosLosUsuariosDTO();
-        return ResponseEntity.ok(usuarios);
+    public ResponseEntity<Page<UsuarioSalidaDTO>> obtenerTodosLosUsuariosPaginados(
+            @Parameter(hidden = true) Pageable pageable) {
+        return ResponseEntity.ok(usuarioServiceImpl.obtenerTodosLosUsuariosPaginados(pageable));
     }
+
 
     @Operation(summary = "Obtener usuario por ID",
         description = "Devuelve un usuario por su ID. Accesible solo por ADMIN.")
@@ -81,15 +97,15 @@ public class UsuarioController {
 
     // -- Metodos PUT --//
 
-    @Operation(summary = "Actualizar usuario por ID",
-        description = "Actualiza un usuario por su ID. Accesible solo por ADMIN.")
-    @PutMapping("/id/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Usuario> actualizarUsuario(@PathVariable Long id, @RequestBody UsuarioEntradaDTO usuarioEntradaDTO) {
-        usuarioServiceImpl.actualizarUsuarioPorIdDto(id, usuarioEntradaDTO);
-        Usuario usuarioActualizado = usuarioServiceImpl.buscarUsuarioPorId(id);
-        return usuarioActualizado != null ? ResponseEntity.ok(usuarioActualizado) : ResponseEntity.notFound().build();
-    }
+//    @Operation(summary = "Actualizar usuario por ID",
+//        description = "Actualiza un usuario por su ID. Accesible solo por ADMIN.")
+//    @PutMapping("/id/{id}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<Usuario> actualizarUsuario(@PathVariable Long id, @RequestBody UsuarioEntradaDTO usuarioEntradaDTO) {
+//        usuarioServiceImpl.actualizarUsuarioPorIdDto(id, usuarioEntradaDTO);
+//        Usuario usuarioActualizado = usuarioServiceImpl.buscarUsuarioPorId(id);
+//        return usuarioActualizado != null ? ResponseEntity.ok(usuarioActualizado) : ResponseEntity.notFound().build();
+//    }
 
     @Operation(summary = "Cambiar el PIN del usuario autenticado",
             description = "Permite al usuario autenticado cambiar su PIN. Requiere el PIN actual y el nuevo PIN (confirmación incluida).",
