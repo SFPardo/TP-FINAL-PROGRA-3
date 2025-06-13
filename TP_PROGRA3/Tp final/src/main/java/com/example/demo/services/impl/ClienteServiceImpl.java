@@ -15,10 +15,13 @@ import com.example.demo.services.ClienteService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -127,6 +130,10 @@ public class ClienteServiceImpl implements ClienteService {
         return clienteRepository.findAll().stream()
                 .map(this::mapToSalidaDTO)
                 .toList();
+    }
+    public Page<ClienteSalidaDTO> obtenerTodosLosClientesPaginados(Pageable pageable) {
+        Page<Cliente> clientesPage = clienteRepository.findAll(pageable);
+        return clientesPage.map(this::mapToSalidaDTO);
     }
     @Override
     @Transactional
@@ -430,5 +437,16 @@ public class ClienteServiceImpl implements ClienteService {
         );
     }
 
+    @Transactional
+    public List<ClienteSalidaDTO> crearMultiplesClientesAdmin(List<ClienteEntradaDTO> dtos) {
+        if (dtos == null || dtos.isEmpty()) {
+            throw new IllegalArgumentException("La lista de clientes a crear no puede ser nula o vacía.");
+        }
+        List<ClienteSalidaDTO> clientesCreados = new ArrayList<>();
+        for (ClienteEntradaDTO dto : dtos) {
+            clientesCreados.add(crearClienteAdmin(dto));
+        }
+        return clientesCreados;
+    }
 
 }

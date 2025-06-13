@@ -5,9 +5,16 @@ import com.example.demo.dto.ClienteEntradaDTO;
 import com.example.demo.services.impl.ClienteServiceImpl;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -30,11 +37,39 @@ public class ClienteController {
     // -- METODOS POST -- //
     @Operation(summary = "Crear un nuevo cliente desde un usuario ADMIN",
             description = "Crea un nuevo cliente con usuario y cuenta. Accesible solo por ADMIN.Permite otorgar permisos de administrador al cliente.")
-    @PostMapping("/crearAdmin")
+    @PostMapping("/admin/crear")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> crearClienteAdmin(@Valid @RequestBody ClienteEntradaDTO dto) {
         ClienteSalidaDTO cliente = clienteServiceImpl.crearClienteAdmin(dto);
         return ResponseEntity.ok(cliente);
+    }
+
+    @Operation(summary = "Crear múltiples clientes desde un usuario ADMIN",
+            description = "Permite a un usuario ADMIN crear una lista de nuevos clientes, cada uno con su usuario y cuenta. Se puede especificar el rol (ADMIN/CLIENTE) para cada cliente.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Lista de clientes a crear (cada uno con su usuario, credenciales y rol).",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ClienteEntradaDTO[].class),
+                            examples = @ExampleObject(name = "Ejemplo de creación de múltiples clientes",
+                                    value = "[" +
+                                            "{\"nombre\":\"Ana\",\"apellido\":\"García\",\"dni\":\"35000111\",\"fechaNacimiento\":\"1988-01-01\",\"telefono\":\"1122223333\",\"email\":\"ana.garcia@example.com\",\"domicilio\":{\"provincia\":\"Bs As\",\"ciudad\":\"La Plata\",\"calle\":\"Calle 1\",\"altura\":100},\"usuario\":{\"nombreUsuario\":\"ana.g\",\"credenciales\":{\"pin\":\"0000\"},\"tipoRol\":\"CLIENTE\"}}," +
+                                            "{\"nombre\":\"Luis\",\"apellido\":\"Martínez\",\"dni\":\"36000222\",\"fechaNacimiento\":\"1992-02-02\",\"telefono\":\"1144445555\",\"email\":\"luis.m@example.com\",\"domicilio\":{\"provincia\":\"Córdoba\",\"ciudad\":\"Córdoba\",\"calle\":\"Av. Central\",\"altura\":200},\"usuario\":{\"nombreUsuario\":\"luis.m\",\"credenciales\":{\"pin\":\"1111\"},\"tipoRol\":\"ADMIN\"}}" +
+                                            "]")
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Clientes creados exitosamente."),
+                    @ApiResponse(responseCode = "400", description = "Solicitud inválida o errores de validación en alguno de los clientes."),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado. Se requiere el rol ADMIN.")
+            })
+    @PostMapping("/admin/crearMuchos")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ClienteSalidaDTO>> crearMultiplesClientesAdmin(
+            @Valid @RequestBody List<ClienteEntradaDTO> dtos) { // Recibe una LISTA de DTOs
+        List<ClienteSalidaDTO> clientesCreados = clienteServiceImpl.crearMultiplesClientesAdmin(dtos);
+        return ResponseEntity.ok(clientesCreados);
     }
 
     @Operation(summary = "Crear un nuevo cliente",
@@ -47,12 +82,24 @@ public class ClienteController {
     }
 
     // -- METODOS GET -- //
-    @Operation(summary = "Obtener todos los clientes",
-            description = "Solo accesible por usuarios con rol ADMIN. Devuelve una lista de todos los clientes.")
+    @Operation(summary = "Obtener todos los clientes paginados",
+            description = "Solo accesible por usuarios con rol ADMIN. Devuelve una lista paginada de todos los clientes.",
+            parameters = {
+                    @Parameter(name = "page", description = "Número de página (0-indexed).", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "0")),
+                    @Parameter(name = "size", description = "Número de elementos por página.", in = ParameterIn.QUERY, schema = @Schema(type = "integer", defaultValue = "10")),
+                    @Parameter(name = "sort", description = "Criterio de ordenamiento (ej. nombre,asc o id,desc).", in = ParameterIn.QUERY, schema = @Schema(type = "string", example = "nombre,asc"))
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Lista paginada de clientes obtenida exitosamente.",
+                            content = @Content(mediaType = "application/json",
+                                    schema = @Schema(implementation = Page.class, subTypes = {ClienteSalidaDTO.class}))),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado. Se requiere el rol ADMIN.")
+            })
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ClienteSalidaDTO>> listarClientes() {
-        return ResponseEntity.ok(clienteServiceImpl.obtenerTodosLosClientesDTO());
+    public ResponseEntity<Page<ClienteSalidaDTO>> listarClientes(
+            @Parameter(hidden = true) Pageable pageable) {
+        return ResponseEntity.ok(clienteServiceImpl.obtenerTodosLosClientesPaginados(pageable));
     }
 
     @Operation(summary = "Buscar cliente por ID",
@@ -228,36 +275,95 @@ public class ClienteController {
         return domicilioActualizado != null ? ResponseEntity.ok(domicilioActualizado) : ResponseEntity.notFound().build();
     }
 
-    @Operation(summary = "Actualizar cliente por ID",
-            description = "Accesible por ADMIN (cualquier ID). Actualiza los datos de un cliente.")
+    @Operation(summary = "Actualizar el nombre de un cliente por ID (Solo ADMIN)",
+            description = "Permite a un ADMIN actualizar el nombre de un cliente específico por su ID. El nuevo nombre se envía directamente en el cuerpo de la solicitud como texto plano.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Nuevo nombre para el cliente (en formato de texto plano)",
+                    required = true,
+                    content = @Content(
+                            mediaType = "text/plain",
+                            schema = @Schema(type = "string"),
+                            examples = @ExampleObject(name = "Ejemplo de cambio de nombre", value = "NuevoNombreCliente")
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Nombre del cliente actualizado exitosamente."),
+                    @ApiResponse(responseCode = "400", description = "Solicitud inválida (cuerpo vacío o nulo)."),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado. Se requiere el rol ADMIN."),
+                    @ApiResponse(responseCode = "404", description = "Cliente no encontrado con el ID especificado.")
+            })
     @PatchMapping("/{id}/nombre")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> actualizarNombre(
             @PathVariable Long id,
-            @RequestParam String nuevoNombre) {
-        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarNombre(id, nuevoNombre);
+            @RequestBody String nuevoNombre) {
+        if (nuevoNombre == null || nuevoNombre.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarNombre(id, nuevoNombre.trim());
         return ResponseEntity.ok(clienteActualizado);
     }
 
-    @Operation(summary = "Actualizar email por ID",
-            description = "Accesible por ADMIN (cualquier ID). Actualiza los datos de un cliente.")
+    @Operation(summary = "Actualizar email de un cliente por ID (Solo ADMIN)",
+            description = "Permite a un ADMIN actualizar el email de un cliente específico por su ID. El nuevo email se envía directamente en el cuerpo de la solicitud como texto plano. Incluye validación de formato de email.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Nuevo email para el cliente (en formato de texto plano)",
+                    required = true,
+                    content = @Content(
+                            mediaType = "text/plain",
+                            schema = @Schema(type = "string", format = "email"),
+                            examples = @ExampleObject(name = "Ejemplo de cambio de email", value = "nuevo.email@example.com")
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Email del cliente actualizado exitosamente."),
+                    @ApiResponse(responseCode = "400", description = "Solicitud inválida (cuerpo vacío o nulo, o formato de email incorrecto)."),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado. Se requiere el rol ADMIN."),
+                    @ApiResponse(responseCode = "404", description = "Cliente no encontrado con el ID especificado.")
+            })
     @PatchMapping("/{id}/email")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> actualizarEmail(
             @PathVariable Long id,
-            @RequestParam String nuevoEmail) {
-        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarEmail(id, nuevoEmail);
+            @RequestBody String nuevoEmail) {
+
+        if (nuevoEmail == null || nuevoEmail.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        if (!nuevoEmail.matches("^[\\w!#$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$")) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarEmail(id, nuevoEmail.trim());
         return ResponseEntity.ok(clienteActualizado);
     }
 
-    @Operation(summary = "Actualizar telefono por ID",
-            description = "Accesible por ADMIN (cualquier ID). Actualiza los datos de un cliente.")
+    @Operation(summary = "Actualizar teléfono de un cliente por ID (Solo ADMIN)",
+            description = "Permite a un ADMIN actualizar el teléfono de un cliente específico por su ID. El nuevo teléfono se envía directamente en el cuerpo de la solicitud como texto plano. Incluye validación de formato de teléfono (10 dígitos).",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Nuevo teléfono para el cliente (en formato de texto plano)",
+                    required = true,
+                    content = @Content(
+                            mediaType = "text/plain",
+                            schema = @Schema(type = "string"),
+                            examples = @ExampleObject(name = "Ejemplo de cambio de teléfono", value = "1198765432")
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Teléfono del cliente actualizado exitosamente."),
+                    @ApiResponse(responseCode = "400", description = "Solicitud inválida (cuerpo vacío o nulo, o formato de teléfono incorrecto)."),
+                    @ApiResponse(responseCode = "403", description = "Acceso denegado. Se requiere el rol ADMIN."),
+                    @ApiResponse(responseCode = "404", description = "Cliente no encontrado con el ID especificado.")
+            })
     @PatchMapping("/{id}/telefono")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClienteSalidaDTO> actualizarTelefono(
             @PathVariable Long id,
             @RequestBody String nuevoTelefono) {
-        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarTelefono(id, nuevoTelefono);
+        if (nuevoTelefono == null || nuevoTelefono.trim().isEmpty() || !nuevoTelefono.matches("\\d{10}")) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        ClienteSalidaDTO clienteActualizado = clienteServiceImpl.cambiarTelefono(id, nuevoTelefono.trim());
         return ResponseEntity.ok(clienteActualizado);
     }
 
