@@ -33,8 +33,6 @@ public class TarjetaDebitoServiceImpl implements TarjetaDebitoService {
     @Autowired
     private CuentaRepository cuentaRepository;
 
-    @Autowired
-    private UsuarioService usuarioService;
 
     @Autowired
     private TarjetaDebitoRepository tarjetaDebitoRepository;
