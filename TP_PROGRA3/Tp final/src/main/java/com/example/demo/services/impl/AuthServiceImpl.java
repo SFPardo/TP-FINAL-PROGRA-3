@@ -18,6 +18,11 @@ public class AuthServiceImpl implements AuthService {
     private AuthenticationManager authenticationManager;
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private CredencialRepository credencialRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
 
     @Override
     public String autenticarUsuario(String nombreUsuario, String pin) {
@@ -29,7 +34,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public void cambiarPinUsuario(Long usuarioId, String nuevoPin) {
-        var credencial = credentialRepository.findByUsuario_UsuarioId(usuarioId)
+        var credencial = credencialRepository.findByUsuario_UsuarioId(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Credencial no encontrada"));
         if(nuevoPin == null || nuevoPin.isEmpty()) {
             throw new IllegalArgumentException("El nuevo PIN no puede ser nulo o vacío");
@@ -44,6 +49,6 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("El nuevo PIN no puede ser igual al PIN actual");
         }
         credencial.setPin(passwordEncoder.encode(nuevoPin));
-        credentialRepository.save(credencial);
+        credencialRepository.save(credencial);
     }
 }
