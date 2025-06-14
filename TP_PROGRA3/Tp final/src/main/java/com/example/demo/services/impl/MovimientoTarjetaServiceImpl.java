@@ -117,6 +117,7 @@ public class MovimientoTarjetaServiceImpl implements MovimientoTarjetaService {
                 .descripcion(movimiento.getDescripcion())
                 .monto(movimiento.getMonto())
                 .fecha(movimiento.getFecha())
+                .tipoMovimiento(movimiento.getTipoMovimiento())
                 .build()).toList();
     }
 }
